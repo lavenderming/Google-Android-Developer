@@ -23,7 +23,7 @@ SQL 数据库的首要原则之一就是 schema：说明数据库如何组织的
 
 contract 类的一种良好组织方式是将数据库的全局定义放于类的根级别，然后在 contract 类的内部为每个表创建对应的内部类，在表内部类中列出表的列。
 
-> 笔记：通过继承 [BaseColumns](https://developer.android.google.cn/reference/android/provider/BaseColumns.html) 接口，内部类可以继承主键成员变量 `_ID`。创建数据库的表并非一定需要该列，但是一些 Android 类比如 cursor adaptors 默认表的该列存在，所以有该变量可以使数据库和 Android 框架更好地配合。
+> 笔记：内部类通过继承 [BaseColumns](https://developer.android.google.cn/reference/android/provider/BaseColumns.html) 接口，可以继承主键成员变量 `_ID`。创建数据库的表并非一定需要该列，但是一些 Android 类比如 cursor adaptors 默认表的该列存在，所以有该变量可以使数据库和 Android 框架更好地配合。
 
 一个为单个表定义了表名和列明的 contract 类例子：
 ```java
@@ -52,6 +52,7 @@ private static final String SQL_CREATE_ENTRIES =
 private static final String SQL_DELETE_ENTRIES =
     "DROP TABLE IF EXISTS " + FeedEntry.TABLE_NAME;
 ```
+> **阿懂的补充**：这里的代码应该是放在后面的 FeedReaderDbHelper.java 中的
 
 就像存储于设备 [internal storage](https://developer.android.google.cn/guide/topics/data/data-storage.html#filesInternal) 的文件，Android 将数据库保存于与应用关联的私有磁盘空间。默认情况下该区域其它应用不可访问。
 
