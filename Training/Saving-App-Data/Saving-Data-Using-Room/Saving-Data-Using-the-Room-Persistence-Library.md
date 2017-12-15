@@ -87,6 +87,5 @@ AppDatabase db = Room.databaseBuilder(getApplicationContext(),
 > 笔记：由于每个 [RoomDatabase](https://developer.android.google.cn/reference/android/arch/persistence/room/RoomDatabase.html) 实例开销极大且极少需要访问多个实例，故实例化 `AppDatabase` 对象时应遵守单例模式。
 
 # Get started
-- [Get started -> 前往网页](https://developer.android.google.cn/training/data-storage/room/defining-data.html)
-
+- [开始 -》 使用 Room entity 定义数据](Defining-data-using-Room-entities.md)
 
