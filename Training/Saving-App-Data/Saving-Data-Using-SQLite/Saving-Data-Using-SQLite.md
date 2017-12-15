@@ -191,11 +191,13 @@ String selection = FeedEntry.COLUMN_NAME_TITLE + " LIKE ?";
 String[] selectionArgs = { "MyTitle" };
 
 int count = db.update(
-    FeedReaderDbHelper.FeedEntry.TABLE_NAME,
+    FeedEntry.TABLE_NAME,
     values,
     selection,
     selectionArgs);
 ```
+
+> 阿懂的发现：此处 `db.update()` 方法的第一个参数原文中为 `FeedReaderDbHelper.FeedEntry.TABLE_NAME` 有误。
 
 # 维持持久的数据库连接
 

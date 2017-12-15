@@ -36,7 +36,7 @@ public class FeedReaderDbHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_ENTRIES);
-        Toast.makeText(mContext, "Create succeeded", Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, "数据库创建成功", Toast.LENGTH_SHORT).show();
     }
 
     @Override

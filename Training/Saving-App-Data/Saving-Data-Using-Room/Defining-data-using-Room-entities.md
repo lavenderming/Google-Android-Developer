@@ -3,6 +3,8 @@
 - [使用主键](#%E4%BD%BF%E7%94%A8%E4%B8%BB%E9%94%AE)
 - [注解索引与唯一性](#%E6%B3%A8%E8%A7%A3%E7%B4%A2%E5%BC%95%E4%B8%8E%E5%94%AF%E4%B8%80%E6%80%A7)
 - [定义对象间的关系](#%E5%AE%9A%E4%B9%89%E5%AF%B9%E8%B1%A1%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB)
+- [创建嵌套对象](#%E5%88%9B%E5%BB%BA%E5%B5%8C%E5%A5%97%E5%AF%B9%E8%B1%A1)
+- [TODO 未完待续（-1s）](#todo-%E6%9C%AA%E5%AE%8C%E5%BE%85%E7%BB%AD%EF%BC%88-1s%EF%BC%89)
 - [系列文章](#%E7%B3%BB%E5%88%97%E6%96%87%E7%AB%A0)
     - [上一篇](#%E4%B8%8A%E4%B8%80%E7%AF%87)
     - [下一篇](#%E4%B8%8B%E4%B8%80%E7%AF%87)
@@ -136,11 +138,19 @@ class Book {
 
 > **阿懂的碎碎念**：机智啊，这里用 parent 和 child 来描述外键约束中列的参照关系，更清晰明了。
 
+外键允许你定义被参照的 entity 更新时执行的操作。比如，可以通过在 [@ForeignKey](https://developer.android.google.cn/reference/android/arch/persistence/room/ForeignKey.html) 注解中包含 [onDelete = CASCADE](https://developer.android.google.cn/reference/android/arch/persistence/room/ForeignKey.html#onDelete()) 来告知 SQLite 当 `User` 被删除时，定义在 `Book` 表中 `User` 拥有的所有书也会被删除。
 
+> 笔记：SQLite 通过一系列的 `REMOVE` 和 `REPLACE` 操作来处理 [@Insert(onConflict = REPLACE)](https://developer.android.google.cn/reference/android/arch/persistence/room/OnConflictStrategy.html#REPLACE)，而不是简单的 `UPDATE` 操作。这个替换冲突值的方法会影响外键约束。更多详情，见 [SQLite 文档](https://sqlite.org/lang_conflict.html) 的 `ON_CONFLICT` 条款
+
+# 创建嵌套对象
+
+# TODO 未完待续（-1s）
+
+有时，即使对象包含多个字段，
 
 
 
 # 系列文章
 ## 上一篇
-- [Saving-Data-Using-the-Room-Persistence-Library](Saving-Data-Using-the-Room-Persistence-Library.md)
+- [使用 Room-Persistence-Library 保存数据](Saving-Data-Using-the-Room-Persistence-Library.md)
 ## 下一篇
