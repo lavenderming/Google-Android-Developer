@@ -68,6 +68,14 @@ public class MainActivity extends AppCompatActivity {
                 updateTextView();
             }
         });
+
+        updateTextView();
+    }
+
+    @Override
+    protected void onDestroy() {
+        mDbHelper.close();
+        super.onDestroy();
     }
 
     private void updateData() {
@@ -86,12 +94,6 @@ public class MainActivity extends AppCompatActivity {
                 values,
                 selection,
                 selectionArgs);
-    }
-
-    @Override
-    protected void onDestroy() {
-        mDbHelper.close();
-        super.onDestroy();
     }
 
     private void deleteAllData() {
