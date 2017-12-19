@@ -9,5 +9,7 @@
 
 - [Run-Your-App.md](\Run-Your-App.md) 完成
 
-- [Build-a-Simple-User-Interface.md](\Build-a-Simple-User-Interface.md) 新建
+- [Build-a-Simple-User-Interface.md](\Build-a-Simple-User-Interface.md) 完成
+
+- [Start-Another-Activity.md](\Start-Another-Activity.md) 新建
 

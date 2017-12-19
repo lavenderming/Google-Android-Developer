@@ -1,0 +1,1 @@
+参见：[Start Another Activity](https://developer.android.com/training/basics/firstapp/starting-activity.html)
