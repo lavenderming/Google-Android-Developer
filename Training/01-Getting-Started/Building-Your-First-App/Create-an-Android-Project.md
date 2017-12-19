@@ -43,7 +43,7 @@
 
 你会看到有两个文件都叫这名：一个文件是项目的，另一个则是 `app` 模块的。每个模块都有其自己的 `build.gradle` 文件，但该项目目前只有一个模块。你将主要使用模块的 `build.gradle` 文件来配置配置 Gradle 工具如何编译和构建你的 app。更多关于该文件的信息，见：[Configure Your Build](https://developer.android.google.cn/studio/build/index.html)
 
-为运行该 app，继续[下一课](/Run-Your-App.md)。
+为运行该 app，继续[下一课](Run-Your-App.md)。
 
 
 

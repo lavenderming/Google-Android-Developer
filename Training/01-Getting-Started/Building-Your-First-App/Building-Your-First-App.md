@@ -4,4 +4,4 @@
 
 在开始课程前，下载并安装 [Android Studio](https://developer.android.google.cn/studio/index.html)
 
-**[开始](\Create-an-Android-Project.md)**
+**[开始](Create-an-Android-Project.md)**

@@ -25,7 +25,7 @@ Android 为 `ViewGroup` 和 `View` 类提供了 XML 词汇表，所以大多数 
 
 # 打开布局编辑器
 
-> 笔记：该课默认你使用 [Android Studio 3.0](https://developer.android.google.cn/studio/) 且你已根据之前的课程[创建了你的 Android 项目](\Create-an-Android-Project.md)
+> 笔记：该课默认你使用 [Android Studio 3.0](https://developer.android.google.cn/studio/) 且你已根据之前的课程[创建了你的 Android 项目](Create-an-Android-Project.md)
 
 开始前，如下设置你的工作区：
 
@@ -174,8 +174,8 @@ Android 为 `ViewGroup` 和 `View` 类提供了 XML 词汇表，所以大多数 
 更多关于 chain 以及其它所有可以对 `ConstraintLayout` 进行的操作，见：[Build a Responsive UI with ConstraintLayout](https://developer.android.google.cn/training/constraint-layout/index.html)
 
 # 运行 app
-若你在[上一课](\Run-Your-App.md)中已经把 app 安装到设备，只需点击工具栏上的 **Apply Changes** ![](https://developer.android.google.cn/studio/images/buttons/toolbar-apply-changes.png) 让新布局跟新 app。或者点击 **Run** ![](https://developer.android.google.cn/studio/images/buttons/toolbar-run.png) 安装并运行 app。
+若你在[上一课](Run-Your-App.md)中已经把 app 安装到设备，只需点击工具栏上的 **Apply Changes** ![](https://developer.android.google.cn/studio/images/buttons/toolbar-apply-changes.png) 让新布局跟新 app。或者点击 **Run** ![](https://developer.android.google.cn/studio/images/buttons/toolbar-run.png) 安装并运行 app。
 
-布局上的 button 目前仍然没做任何工作。让点击 button 时能打开另一个 activity，[继续下一课](\Start-Another-Activity.md)。
+布局上的 button 目前仍然没做任何工作。让点击 button 时能打开另一个 activity，[继续下一课](Start-Another-Activity.md)。
 
 

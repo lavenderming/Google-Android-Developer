@@ -3,7 +3,7 @@
 - [在真实设备中运行](#%E5%9C%A8%E7%9C%9F%E5%AE%9E%E8%AE%BE%E5%A4%87%E4%B8%AD%E8%BF%90%E8%A1%8C)
 - [在模拟器中运行](#%E5%9C%A8%E6%A8%A1%E6%8B%9F%E5%99%A8%E4%B8%AD%E8%BF%90%E8%A1%8C)
 
-在[上一课](\Create-an-Android-Project.md)，你创建了一个显示 `Hello World` 的 Android 项目。你现在可以在真实设备或模拟器中运行该 app。
+在[上一课](Create-an-Android-Project.md)，你创建了一个显示 `Hello World` 的 Android 项目。你现在可以在真实设备或模拟器中运行该 app。
 
 # 在真实设备中运行
 如下设置你的设备：
@@ -27,7 +27,7 @@
 
 Android Studio 将 app 安装到连接的设备上并启动 app。
 
-这就是在设备上运行“hello world”！要继续开发，继续[下一课](/Build-a-Simple-User-Interface.md)
+这就是在设备上运行“hello world”！要继续开发，继续[下一课](Build-a-Simple-User-Interface.md)
 
 # 在模拟器中运行
 
@@ -44,5 +44,5 @@ Android Studio 将 app 安装到连接的设备上并启动 app。
 
 Android Studio 将 app 安装到模拟器上并启动 app。
 
-这就是在模拟器上运行“hello world”！要继续开发，继续[下一课](/Build-a-Simple-User-Interface.md)
+这就是在模拟器上运行“hello world”！要继续开发，继续[下一课](Build-a-Simple-User-Interface.md)
 
