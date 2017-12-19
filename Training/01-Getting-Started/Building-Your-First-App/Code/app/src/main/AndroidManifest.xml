@@ -16,6 +16,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".DisplayMessageActivity"
+            android:parentActivityName=".MainActivity">
+            <!-- 如果你需要支持 API 15 或更低的 API 版本，则需要 meta-data 标签 -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
     </application>
 
 </manifest>

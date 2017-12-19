@@ -11,5 +11,7 @@
 
 - [Build-a-Simple-User-Interface.md](Build-a-Simple-User-Interface.md) 完成
 
-- [Start-Another-Activity.md](Start-Another-Activity.md) 新建
+- [Start-Another-Activity.md](Start-Another-Activity.md) 完成
+
+all done!
 
