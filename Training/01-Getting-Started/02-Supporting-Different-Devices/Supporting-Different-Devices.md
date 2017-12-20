@@ -18,14 +18,17 @@ Android 设备在世界各地有各种形状和大小。Android设备在世界�
 # 课程
 
 - [Supporting Different Languages and Cultures](https://developer.android.com/training/basics/supporting-devices/languages.html)
-
+    - [Supporting-Different-Languages-and-Cultures.md](Supporting-Different-Languages-and-Cultures.md)
+    
     了解如何使用可选资源支持不同语言和文化。
 
 - [Supporting Different Screens](https://developer.android.com/training/basics/supporting-devices/screens.html)
+    - [Supporting-Different-Screens.md](Supporting-Different-Screens.md)
 
     了解如何优化不同屏幕尺寸和密度的用户体验。
 
 - [Supporting Different Platform Versions](https://developer.android.com/training/basics/supporting-devices/platforms.html)
+    - [Supporting-Different-Platform-Versions.md](Supporting-Different-Platform-Versions.md)
 
     学习如何在使用 Android 新版本中 API 的同时继续支持旧版的 Android。
 
