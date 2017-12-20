@@ -12,6 +12,7 @@
 
 <div style="position:relative;height:0;padding-bottom:56.12%"><iframe src="https://www.youtube.com/embed/XamMbnzI5vE?ecver=2" style="position:absolute;width:100%;height:100%;left:0" width="642" height="360" frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen></iframe></div>
 
+
 [ConstraintLayout](https://developer.android.com/reference/android/support/constraint/ConstraintLayout.html) 通过 API 库使用，该库适配 Android 2.3（API 级别 9）及更高版本。本页提供在 3.0 或更高版本 Android Studio 中通过 `ConstraintLayout` 构建布局的指南。如果你需要更多关于布局编辑器本身的信息，见 Android Studio 指南中 [Build a UI with Layout Editor](https://developer.android.com/studio/write/layout-editor.html)。
 
 查看更多使用 `ConstraintLayout` 创建的布局，见：[Constraint Layout Examples project on GitHub](https://github.com/googlesamples/android-ConstraintLayoutExamples)
@@ -30,3 +31,4 @@
 尽管缺少约束不会导致编译时错误，布局编辑器仍会在工具栏上将缺少约束作为错误表明。点击 **Show Warnings and Errors** ![](https://developer.android.com/studio/images/buttons/layout-editor-errors.png) 查看错误和其它警告。为避免你遗失约束，布局编辑器可以为你自动添加约束，通过 [Autoconnect and infer constraints](https://developer.android.com/training/constraint-layout/index.html#use-autoconnect-and-infer-constraints) 功能。
 
 # 添加 ConstraintLayout 到项目
+在项目中使用 `ConstraintLayout`
