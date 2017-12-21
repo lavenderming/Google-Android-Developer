@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Using ViewPager for Screen Slides</string>
+    <string name="lorem_ipsum">文字</string>
+</resources>

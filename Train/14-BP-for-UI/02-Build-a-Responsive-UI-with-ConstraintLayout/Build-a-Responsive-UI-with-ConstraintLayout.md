@@ -187,6 +187,37 @@
 
 # 调整 view 的尺寸
 
-你可以使用 view 角上的大小调整手柄调整 view 的大小
+你可以使用 view 角上的大小调整手柄调整 view 的大小，但这是将尺寸硬编码，这样的 view 无法更具不同的内容或屏幕大小自动调整尺寸。点击 view 然后打开编辑器右侧的 **Attributes** ![](https://developer.android.com/studio/images/buttons/window-properties.png) 窗口选择不同的尺寸模式。
+
+在 **Attributes** 窗口的顶部附近是 view 检查器，它包含了对几种布局属性的控制，如图10.所示（这些属性只有当 view 在 constraint 布局下时可用）。
+
+![图10.**Attributes** 窗口包含了对 **1** 尺寸比，**2** 删除约束，**3** 宽/高模式，**4** margin，**5** 约束倾向的控制](https://developer.android.com/training/constraint-layout/images/layout-editor-properties-callouts_2x.png)
+*图10.**Attributes** 窗口包含了对 **1** 尺寸比，**2** 删除约束，**3** 宽/高模式，**4** margin，**5** 约束倾向的控制*
+
+可用通过点击图10.中 **3** 标明的符号改变 view 宽/高的计算方式。这些符号表示的尺寸模式如下（点击符号在不同模式间切换）：
+- ![](https://developer.android.com/studio/images/buttons/layout-width-fixed.png) **Fixed（固定）**：可以在下面的文本框中指定特定的尺寸，或者在编辑器中调整视图的大小（即硬编码）。
+- ![](https://developer.android.com/studio/images/buttons/layout-width-wrap.png) **Wrap Content（包裹内容）**：view 将拓宽到刚好将其内容包住。
+- ![](https://developer.android.com/studio/images/buttons/layout-width-match.png) **Match Constraints（匹配约束）**：view 将尽可能拓宽以匹配每边的约束（在计算 view 的 margin 后）。但你可以通过下面的属性和值改变这种行为（这些属性只在你将 view 的宽设为 match constraints 时生效）：
+    
+    - **layout_constraintWidth_default**
+        - **spread**：每个方向都尽可能拉伸 view 来满足约束，这是默认行为。
+        - **wrap**：将 view 拉伸到刚好符合其内容的宽度，但在约束需要时，仍然允许 view 宽度比其内容要求宽度更小。所以它和 **Wrap Content** 的不同在于，宽度设为 **Wrap Content** view 总是强制拉伸到内容宽度，然而使用 **Match Constraints** 并将 **layout_constraintWidth_default** 设为 **wrap** 的 view 还允许自己的宽度能小于内容宽度。
+    
+    - **layout_constraintWidth_min**
+        
+        使用 `dp` 指定 view 的最小宽度。
+    - **layout_constraintWidth_max**
+
+        使用 `dp` 指定 view 的最大宽度
+
+    然而，如果给定的方向只有一个约束，view 将拉伸到匹配它的内容。在宽或高中任一个使用该模式，还能 [设置尺寸比](https://developer.android.com/training/constraint-layout/index.html#ratio)
+
+    ![](https://developer.android.com/training/constraint-layout/images/layout-editor-ratio-properties_2x.png)
+
+> 笔记：`ConstraintLayout` 内的所有 view 都不能使用 `match_parent`。而是使用 `match constraints`（`0dp`）
+
+## 
+ 
+
 
 
