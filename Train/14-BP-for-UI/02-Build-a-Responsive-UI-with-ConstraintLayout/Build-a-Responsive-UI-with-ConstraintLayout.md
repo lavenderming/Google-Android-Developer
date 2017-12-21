@@ -8,6 +8,12 @@
 - [添加一个约束](#%E6%B7%BB%E5%8A%A0%E4%B8%80%E4%B8%AA%E7%BA%A6%E6%9D%9F)
     - [父定位](#%E7%88%B6%E5%AE%9A%E4%BD%8D)
     - [顺序定位](#%E9%A1%BA%E5%BA%8F%E5%AE%9A%E4%BD%8D)
+    - [对齐](#%E5%AF%B9%E9%BD%90)
+    - [底线对齐（Baseline alignment）](#%E5%BA%95%E7%BA%BF%E5%AF%B9%E9%BD%90%EF%BC%88baseline-alignment%EF%BC%89)
+    - [约束到参考线（guideline）](#%E7%BA%A6%E6%9D%9F%E5%88%B0%E5%8F%82%E8%80%83%E7%BA%BF%EF%BC%88guideline%EF%BC%89)
+    - [约束到分界线（barrier）](#%E7%BA%A6%E6%9D%9F%E5%88%B0%E5%88%86%E7%95%8C%E7%BA%BF%EF%BC%88barrier%EF%BC%89)
+- [调整约束倾向（bias）](#%E8%B0%83%E6%95%B4%E7%BA%A6%E6%9D%9F%E5%80%BE%E5%90%91%EF%BC%88bias%EF%BC%89)
+- [调整 view 的尺寸](#%E8%B0%83%E6%95%B4-view-%E7%9A%84%E5%B0%BA%E5%AF%B8)
 
 # 概述
 
@@ -23,7 +29,7 @@
 查看更多使用 `ConstraintLayout` 创建的布局，见：[Constraint Layout Examples project on GitHub](https://github.com/googlesamples/android-ConstraintLayoutExamples)
 
 # 约束概述
-为定义 `ConstraintLayout` 中 view 的位置，你必须至少给 view 添加一个横向和一个纵向的约束。每个约束都代表了与其它 view、或父布局、或不可见的参考线的连接或对齐。一个约束定义了 view 沿横轴或纵轴的位置，所以每个 view 在每个轴上必须至少有一个约束，但通常需要多个。
+为定义 `ConstraintLayout` 中 view 的位置，你必须至少给 view 添加一个横向和一个纵向的约束。每个约束都代表了与其它 view、或父布局、或不可见的参考线（guideline）的连接或对齐。一个约束定义了 view 沿横轴或纵轴的位置，所以每个 view 在每个轴上必须至少有一个约束，但通常需要多个。
 
 当你将一个 view 拖拽入布局编辑器后，它将位于你放置它的地方，即使它还没有约束。但是，这只是为了编辑的方便，如果在设备上运行时布局中的一个 view 没有约束，它将处于 \[0,0\]（左上角） 的位置。
 
@@ -101,4 +107,86 @@
 ![图4.到父布局的一个水平约束](https://developer.android.com/training/constraint-layout/images/parent-constraint_2x.png)
 
 ## 顺序定位
+
+定义两个 view 的显示顺序，横纵均可。
+
+如下图，B 受约束总处于 A 的右侧，C 受约束总位于 A 的下方。但这里的约束没有包含对齐，B 仍然可以上下移动。
+
+![图5.横向与纵向约束](https://developer.android.com/training/constraint-layout/images/position-constraint_2x.png)
+
+
+## 对齐
+
+对齐指 view 的某边与另一个 view 的对应边对齐
+
+如下图，B 的左侧边与 A 的左侧边对齐。如果你想中间对齐，在两侧边都创建约束。
+
+![图6.水平对齐约束](https://developer.android.com/training/constraint-layout/images/alignment-constraint_2x.png)
+
+可以通过向约束相反方向拖动 view 来偏移对齐。例如，下图显示 B 到对齐有 24dp 的偏移。偏移通过被约束的 view 的 margin 来定义。
+
+![图7.一个偏移的水平对齐约束](https://developer.android.com/training/constraint-layout/images/alignment-constraint-offset_2x.png)
+
+还可以选中所有想要对齐的 view，然后点击工具栏上的 **Align** ![](https://developer.android.com/studio/images/buttons/layout-editor-align.png) 并选择对齐方式。
+
+## 底线对齐（Baseline alignment）
+
+将一个 view 文本的底线对齐到另一个 view 文本的底线。
+
+如下图，B 的第一行和 A 中的文本对齐。
+
+![图8.底线对齐约束](https://developer.android.com/training/constraint-layout/images/baseline-constraint_2x.png)
+
+为创建底线约束选中你想约束的 text view 然后点击出现在选中 view 下的 **Edit Baseline** ![](https://developer.android.com/studio/images/buttons/layout-editor-action-baseline.png)。之后点击底线并将其拖拽到另一个底线。
+
+## 约束到参考线（guideline）
+
+你可以在你想约束 view 的地方添加垂直或水平的参考线，并且参考线对用户不可见。可以将参考线放在布局中，参考线的位置相对于布局的边，可以使用 dp 或百分比来度量。
+
+为创建参考线，点击工具栏上的 **Guidelines** ![](https://developer.android.com/studio/images/buttons/layout-editor-guidelines.png)，然后点击 **Add Vertical Guideline** 或 **Add Horizontal Guideline**。
+
+拖拽虚线来重定位参考线，点击参考线边缘的圆形来转换测量模式。
+
+![图9.一个约束到参考线的 view](https://developer.android.com/training/constraint-layout/images/guideline-constraint_2x.png)
+
+## 约束到分界线（barrier）
+> 阿懂的笔记：barrier 是在 `constraintlayout` v1.1.0-beta1 时引入的，要执行这部分的操作，需要将依赖至少（最新为 beta3）改为：`com.android.support.constraint:constraint-layout:1.1.0-beta1`
+
+类似参考线，分界线是用来约束 view 的不可见线。与 Guideline 不同，分界线不定义自己的位置，分界线的位置随其内部 view 的位置移动。这在要将一个 view 约束到一组 view 而不是某个特定的 view 时很有用。
+
+例如，下图显示了 view C 被约束到分界线的右侧。分界线被设置为 view A 和 view B 两者的 `end`（指从左到右布局的右侧）。所以 view A 和 view B 哪个的右侧更右，分界线就按更右的位置来确定自己的位置。
+
+![图9.](https://developer.android.com/training/constraint-layout/images/barrier-constraint_2x.png)
+
+为创建分界线，依据如下步骤：
+1. 点击工具栏的 **Guidelines** ![](https://developer.android.com/studio/images/buttons/layout-editor-guidelines.png) 然后点击 **Add Vertical Barrier** 或 **Add Horizontal Barrier**。
+1. 在 **Component Tree** 窗口，选择你想放入分界线的 view，把它们拖入分界线组件。
+1. 在 **Component Tree** 窗口中选中分界线，打开 **Attributes** ![](https://developer.android.com/studio/images/buttons/window-properties.png) 窗口，然后设置 **barrierDirection**
+
+现在你可以创建从其它 view 到分界线的约束了。
+
+你还可以将分界线内部的 view 约束到分界线上。这样，你可以确保分界线内的所有 view 总是相互对齐，即使你不知道哪个 view 最长或最高。
+
+> 阿懂的疑惑：这种操作好像没有意义？如果分界线内部的 view 对齐到分界线，那分界线就不能随 view 的变化而改变位置了，是原文描述错误还是我理解有误？
+
+你也可以将一条参考线放到分界线内部来保证分界线的“最小”位置
+
+> 阿懂的补充：理解该部分内容时我还参考了：
+> - [No resource identifier found for attribute 'barrierDirection' in package - ConstraintLayout Barrier](https://stackoverflow.com/questions/46017958/no-resource-identifier-found-for-attribute-barrierdirection-in-package-const)
+> - [Add Constratint Layout Barriers Missing In Context Menu of Android Android Studio](https://stackoverflow.com/questions/46028235/add-constratint-layout-barriers-missing-in-context-menu-of-android-android-studi)
+> - [Barriers](https://constraintlayout.com/basics/barriers.html)
+> 
+> 话说 Android Studio 还能根据依赖的不同改变布局编辑器中的按钮是真的骚。
+
+# 调整约束倾向（bias）
+当你在 view 的两侧都添加了约束（且 view 在这两侧方向的尺寸设置是 `fixed` 或 `wrap content`），那么 view 在默认倾向 50% 的作用下位于两个约束的中间。你可以通过拖拽 **Attributes** 窗口中的倾向滑块或拖拽 view 来调整倾向，如下视频所示。
+
+[视频5.调整约束倾向](https://storage.googleapis.com/androiddevelopers/videos/studio/adjust-constraint-bias.mp4)
+
+如果你想让 view 拉伸自己的尺寸来契合约束，[设置尺寸为 `match constraints`](https://developer.android.com/training/constraint-layout/index.html#adjust-the-view-size)
+
+# 调整 view 的尺寸
+
+你可以使用 view 角上的大小调整手柄调整 view 的大小
+
 
