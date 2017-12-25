@@ -11,3 +11,9 @@ manifest 内各种类型的组件元素——[\<activity>](https://developer.and
 
 [\<application>](https://developer.android.com/guide/topics/manifest/application-element.html) 元素也支持 `android:process` 属性，这里可以设置应用于所有组件的 `android:process` 默认值。
 
+当内存低且其它更迫切向用户提供服务的组件需要时，Android 可能会决定关闭某进程。相应的，运行于该进程上的 app 组件会被销毁。当又有其它工作需要这些组件执行时，进程会再次启动。
+
+在决定杀掉（kill）哪个进程时，Android 系统会评估他们对用户的相对重要程度。例如，与运行可见 Activity 的进程相比，系统更倾向关闭屏幕上不再可见的 Activity 所在的进程。因此，是否终止进程的决定取决于在该进程中运行的组件的状态。
+
+
+
