@@ -4,6 +4,7 @@
 - [可以尝试](#%E5%8F%AF%E4%BB%A5%E5%B0%9D%E8%AF%95)
 - [概述](#%E6%A6%82%E8%BF%B0)
 - [创建一个 Fragment 类](#%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA-fragment-%E7%B1%BB)
+- [通过 XML 添加 Fragment 到 Activity](#%E9%80%9A%E8%BF%87-xml-%E6%B7%BB%E5%8A%A0-fragment-%E5%88%B0-activity)
 
 # 还需阅读
 - [Fragments](https://developer.android.com/guide/components/fragments.html)
@@ -35,3 +36,9 @@ public class ArticleFragment extends Fragment {
     }
 }
 ```
+
+就像 activity，fragment 应该实现它的其它生命周期回调，这样可以让你管理它从 activity 添加或删除时、或 Activity 自身状态改变时的状态。例如，当 activity 的 [onPause()](https://developer.android.com/reference/android/app/Activity.html#onPause()) 方法被调用，activity 上的任何 fragment 都会收到对自己 [onPause()](https://developer.android.com/reference/android/support/v4/app/Fragment.html#onPause()) 的调用。
+
+更多关于 fragment 生命周期和回调方法的信息，见：[Fragments](https://developer.android.com/guide/components/fragments.html) 开发者指南。
+
+# 通过 XML 添加 Fragment 到 Activity
