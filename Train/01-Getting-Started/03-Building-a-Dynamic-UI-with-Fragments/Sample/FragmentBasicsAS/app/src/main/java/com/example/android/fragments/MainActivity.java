@@ -27,9 +27,9 @@ public class MainActivity extends FragmentActivity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.news_articles);
-
-        // Check whether the activity is using the layout version with
-        // the fragment_container FrameLayout. If so, we must add the first fragment
+        
+        // 检测 activity 是否使用包含 fragment_container FrameLayout 版本的布局文件。
+        // 如果使用，即 fragment_container 不为空，则向 activity 中添加显示标题的 fragment
         if (findViewById(R.id.fragment_container) != null) {
 
             // However, if we're being restored from a previous state,
@@ -69,7 +69,7 @@ public class MainActivity extends FragmentActivity
         if (articleFrag != null) {
             // 若 article frag 存在, 说明处于双面板布局
 
-            // 调用 ArticleFragment 中的方法更新它的内容
+            // 调用显示文章内容的 ArticleFragment 中的方法更新它的内容
             articleFrag.updateArticleView(position);
 
         } else {

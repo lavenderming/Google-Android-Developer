@@ -1,6 +1,9 @@
 - [问题](#%E9%97%AE%E9%A2%98)
     - [如何解决 `Frameworks detected: Android framework is detected in the project Configure`](#%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3-frameworks-detected-android-framework-is-detected-in-the-project-configure)
 
+# 心得
+## onCreate 与 onStart 各自作用
+从这个项目中看，onCreate 主要用于创建布局（包括各种各样的小部件）而 onStart 主要用于向各种 view 中添加内容。
 
 # 问题
 ## 如何解决 `Frameworks detected: Android framework is detected in the project Configure`

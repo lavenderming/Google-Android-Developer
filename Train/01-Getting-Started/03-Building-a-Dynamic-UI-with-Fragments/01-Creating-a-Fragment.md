@@ -10,7 +10,7 @@
 - [Fragments](https://developer.android.com/guide/components/fragments.html)
 
 # 可以尝试
-- [FragmentBasics.zip](Sample/)
+- [FragmentBasics.zip](Sample/FragmentBasics.zip)
 
 # 概述
 可以把 fragment 认为是 activity 的模块化部分，它有自己的生命周期，接收自己的输入事件，在 activity 运行时可以添加或删除（有点像一个可以用在不同 activity 中的“小 Activity”）。本课程展示如何用[支持库](https://developer.android.com/tools/support-library/index.html)继承 [Fragment](https://developer.android.com/reference/android/support/v4/app/Fragment.html) 类，让你的 app 仍然保持对最低运行 Android 1.6 的设备的兼容性。
@@ -42,3 +42,50 @@ public class ArticleFragment extends Fragment {
 更多关于 fragment 生命周期和回调方法的信息，见：[Fragments](https://developer.android.com/guide/components/fragments.html) 开发者指南。
 
 # 通过 XML 添加 Fragment 到 Activity
+
+即使 fragment 是可复用、模块化的 UI 组件，每个 [Fragment](https://developer.android.com/reference/android/support/v4/app/Fragment.html) 类的实例也必须关联到一个父 [FragmentActivity](https://developer.android.com/reference/android/support/v4/app/FragmentActivity.html)。你可以通过在 activity 的 XML 布局文件中定义每个 fragment 来完成这种关联。
+
+> 笔记：[FragmentActivity](https://developer.android.com/reference/android/support/v4/app/FragmentActivity.html) 是支持库提供的特殊 activity，用于处理系统版本是 API 11 之前 fragment。如果你支持的最低系统版本是 API 11 或更高，那么你可以使用一般的 [Activity](https://developer.android.com/reference/android/app/Activity.html)。
+
+这有个在设备屏幕为“large”时在一个 activity 内添加两个 fragment 的 activity 布局文件（由目录名中的 `large` 限定符指定）。
+
+```xml
+<!-- res/layout-large/news_articles.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+    <fragment android:name="com.example.android.fragments.HeadlinesFragment"
+              android:id="@+id/headlines_fragment"
+              android:layout_weight="1"
+              android:layout_width="0dp"
+              android:layout_height="match_parent" />
+
+    <fragment android:name="com.example.android.fragments.ArticleFragment"
+              android:id="@+id/article_fragment"
+              android:layout_weight="2"
+              android:layout_width="0dp"
+              android:layout_height="match_parent" />
+
+</LinearLayout>
+```
+> 小提示：更多关于如何为不同屏幕尺寸创建布局，见 [Supporting Different Screen Sizes](https://developer.android.com/training/multiscreen/screensizes.html)
+
+然后在 activity 中应用该布局：
+```java
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+
+public class MainActivity extends FragmentActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.news_articles);
+    }
+}
+```
+
+如果你使用 [v7 appcompat library](https://developer.android.com/tools/support-library/features.html#v7-appcompat)，你的 activity 应该继承 [AppCompatActivity](https://developer.android.com/reference/android/support/v7/app/AppCompatActivity.html)，它是 [FragmentActivity](https://developer.android.com/reference/android/support/v4/app/FragmentActivity.html) 类的子类。更多信息见：[Adding the App Bar](https://developer.android.com/training/appbar/index.html)。
+
+> 笔记：当你通过在 activity 的 XML 布局文件中定义 fragment 来添加 fragment，你 **不能** 在运行时移除这个 fragment。如果你计划在用户交互的过程中转换 fragment，你必须在 activity 第一次启动时将 fragment 添加到 activity 中，如下节课中所示。

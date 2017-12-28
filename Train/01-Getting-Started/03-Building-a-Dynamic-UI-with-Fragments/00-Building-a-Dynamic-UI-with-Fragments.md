@@ -15,7 +15,7 @@
 - [Supporting Tablets and Handsets](https://developer.android.com/guide/practices/tablets-and-handsets.html)
 
 # 可以尝试
-- [FragmentBasics.zip](http://developer.android.com/shareables/training/FragmentBasics.zip)
+- [FragmentBasics.zip](Sample/FragmentBasics.zip)
 
 # 概述
 要在 Android 中创建一个动态且多面板的用户界面，你需要将 UI 组件和 activity 行为封装到可以适时移入或移出 Activity 的模块中。
