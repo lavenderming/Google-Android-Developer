@@ -10,7 +10,7 @@
 - [Fragments](https://developer.android.com/guide/components/fragments.html)
 
 # 可以尝试
-- [FragmentBasics.zip](http://developer.android.com/shareables/training/FragmentBasics.zip)
+- [FragmentBasics.zip](Sample/)
 
 # 概述
 可以把 fragment 认为是 activity 的模块化部分，它有自己的生命周期，接收自己的输入事件，在 activity 运行时可以添加或删除（有点像一个可以用在不同 activity 中的“小 Activity”）。本课程展示如何用[支持库](https://developer.android.com/tools/support-library/index.html)继承 [Fragment](https://developer.android.com/reference/android/support/v4/app/Fragment.html) 类，让你的 app 仍然保持对最低运行 Android 1.6 的设备的兼容性。
@@ -20,7 +20,7 @@
 # 创建一个 Fragment 类
 为创建 fragment，先继承 [Fragment](https://developer.android.com/reference/android/support/v4/app/Fragment.html) 类，然后重写核心生命周期方法来插入 app 的逻辑，类似使用 [Activity](https://developer.android.com/reference/android/app/Activity.html) 类。
 
-一个不同之处是在创建 [Fragment](https://developer.android.com/reference/android/support/v4/app/Fragment.html) 时你必须使用 [onCreateView()](https://developer.android.com/reference/android/support/v4/app/Fragment.html#onCreateView(android.view.LayoutInflater,\ android.view.ViewGroup,\ android.os.Bundle)) 回调函数来定义布局。事实上这是让 fragment 运行你需要的唯一回调。例子：
+一个不同之处是在创建 [Fragment](https://developer.android.com/reference/android/support/v4/app/Fragment.html) 时你必须使用 [onCreateView()](https://developer.android.com/reference/android/support/v4/app/Fragment.html#onCreateView(android.view.LayoutInflater,android.view.ViewGroup,android.os.Bundle)) 回调函数来定义布局。事实上这是让 fragment 运行你需要的唯一回调。例子：
 ```java
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
