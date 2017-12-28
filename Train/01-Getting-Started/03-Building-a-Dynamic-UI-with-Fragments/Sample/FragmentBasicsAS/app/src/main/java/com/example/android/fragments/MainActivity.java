@@ -19,27 +19,25 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 
-public class MainActivity extends FragmentActivity 
+public class MainActivity extends FragmentActivity
         implements HeadlinesFragment.OnHeadlineSelectedListener {
 
-    /** activity 首次创建时被调用 */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.news_articles);
         
         // 检测 activity 是否使用包含 fragment_container FrameLayout 版本的布局文件。
-        // 如果使用，即 fragment_container 不为空，则向 activity 中添加显示标题的 fragment
+        // 如果使用，即 fragment_container 不为空（用于手持设备的单面板布局），
+        // 则向 activity 中添加显示文章标题的 fragment
         if (findViewById(R.id.fragment_container) != null) {
 
-            // However, if we're being restored from a previous state,
-            // then we don't need to do anything and should return or else
-            // we could end up with overlapping fragments.
+            // 如果 activity 是从之前的状态恢复，则跳过向 activity 中添加 fragment 的操作。
             if (savedInstanceState != null) {
                 return;
             }
 
-            // Create an instance of ExampleFragment
+            // 创建用于显示文章标题的 HeadlinesFragment 的实例
             HeadlinesFragment firstFragment = new HeadlinesFragment();
 
             // In case this activity was started with special instructions from an Intent,
@@ -47,8 +45,8 @@ public class MainActivity extends FragmentActivity
             firstFragment.setArguments(getIntent().getExtras());
 
             // 将 fragment 添加到 'fragment_container' FrameLayout
-            getSupportFragmentManager()
-                    .beginTransaction()
+            getSupportFragmentManager()     // 获取 FragmentManager
+                    .beginTransaction()     // 获取 FragmentTransaction
                     .add(R.id.fragment_container, firstFragment)
                     .commit();
         }
