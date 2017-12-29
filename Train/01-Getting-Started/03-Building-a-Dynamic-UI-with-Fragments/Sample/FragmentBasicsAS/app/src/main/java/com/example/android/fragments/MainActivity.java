@@ -73,19 +73,21 @@ public class MainActivity extends FragmentActivity
         } else {
             // 若不存在，说明处于单面板布局，则需要变换 fragment
 
-            // Create fragment and give it an argument for the selected article
+            // 创建 fragment 并设置其参数
             ArticleFragment newFragment = new ArticleFragment();
             Bundle args = new Bundle();
             args.putInt(ArticleFragment.ARG_POSITION, position);
             newFragment.setArguments(args);
+
+            // 创建 fragment 事务
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
-            // Replace whatever is in the fragment_container view with this fragment,
-            // and add the transaction to the back stack so the user can navigate back
+            // 不论当前的 fragment_container view 是什么，将其替换为新的 fragment
+            // 将事务添加到 back stack 让用户可以回退
             transaction.replace(R.id.fragment_container, newFragment);
             transaction.addToBackStack(null);
 
-            // Commit the transaction
+            // 提交事务
             transaction.commit();
         }
     }
