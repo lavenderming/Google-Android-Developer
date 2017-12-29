@@ -4,6 +4,7 @@
 - [可以尝试](#%E5%8F%AF%E4%BB%A5%E5%B0%9D%E8%AF%95)
 - [概述](#%E6%A6%82%E8%BF%B0)
 - [在运行时向 activity 添加 fragment](#%E5%9C%A8%E8%BF%90%E8%A1%8C%E6%97%B6%E5%90%91-activity-%E6%B7%BB%E5%8A%A0-fragment)
+- [替换 fragment](#%E6%9B%BF%E6%8D%A2-fragment)
 
 # 还需阅读
 - [Fragments](https://developer.android.com/guide/components/fragments.html)
@@ -53,9 +54,74 @@
 
 当你准备好更改时，必须调用 [FragmentTransaction](https://developer.android.com/reference/android/support/v4/app/FragmentTransaction.html) 的 [commit()](https://developer.android.com/reference/android/support/v4/app/FragmentTransaction.html#commit())。
 
-下面是如何向前面展示的布局添加一个 fragment 的例子
+下面是如何向前面展示的布局中添加一个 fragment 的例子
 ```java
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 
+public class MainActivity extends FragmentActivity {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.news_articles);
+        
+        // 检测 activity 是否使用包含 fragment_container FrameLayout 版本的布局文件。
+        // 如果使用，即 fragment_container 不为空（用于手持设备的单面板布局），
+        // 则向 activity 中添加显示文章标题的 fragment
+        if (findViewById(R.id.fragment_container) != null) {
+
+            // 如果 activity 是从之前的状态恢复，则跳过向 activity 中添加 fragment 的操作。
+            if (savedInstanceState != null) {
+                return;
+            }
+
+            // 创建用于显示文章标题的 HeadlinesFragment 的实例
+            HeadlinesFragment firstFragment = new HeadlinesFragment();
+
+            // 如果该 activity 由来自 Intent 的特殊指令启动，
+            // 传入 Intent 的 extras 作为 fragment 的参数
+            firstFragment.setArguments(getIntent().getExtras());
+
+            // 将 fragment 添加到 'fragment_container' FrameLayout
+            getSupportFragmentManager()     // 获取 FragmentManager
+                    .beginTransaction()     // 获取 FragmentTransaction
+                    .add(R.id.fragment_container, firstFragment)
+                    .commit();
+        }
+    }
+}
 ```
+
+由于该 fragment 是运行时被添加到 [FrameLayout](https://developer.android.com/reference/android/widget/FrameLayout.html) 容器中的——而不是在 activity 的布局文件中定义 `<fragment>` 元素——现在 activity 可以移除该 fragment 并用另一个 fragment 来代替它了。
+
+# 替换 fragment
+替换 fragment 的流程类似于添加 fragment 的流程，只不过调用的是 [replace()](https://developer.android.com/reference/android/support/v4/app/FragmentTransaction.html#replace(int,android.support.v4.app.Fragment)) 而不是 [add()](https://developer.android.com/reference/android/support/v4/app/FragmentTransaction.html#add(android.support.v4.app.Fragment,java.lang.String))。
+
+记住当你执行 fragment 事务，比如替换或删除一个 fragment，通常要允许用户回退并“撤销”更改。为允许用户在 fragment 事务间回退，在 commit [FragmentTransaction](https://developer.android.com/reference/android/support/v4/app/FragmentTransaction.html) 前必须调用它的 [addToBackStack()](https://developer.android.com/reference/android/support/v4/app/FragmentTransaction.html#addToBackStack(java.lang.String)) 方法。
+
+> 笔记：当你移除或替换某个 fragment 并将事务添加到 back stack，则被移除的 fragment 处于 stopped 状态（而不是 destroyed）。如果用户回退要恢复 fragment，它重新启动。如果你*没有*把事务添加到 back stack，那么当 fragment 被移除或替换时该 fragment 会被销毁。
+
+替换 fragment 的代码片段：
+```java
+// 创建 fragment 并设置其参数
+ArticleFragment newFragment = new ArticleFragment();
+Bundle args = new Bundle();
+args.putInt(ArticleFragment.ARG_POSITION, position);
+newFragment.setArguments(args);
+
+// 创建 fragment 事务
+FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+// 不论当前的 fragment_container view 是什么，将其替换为新的 fragment
+// 将事务添加到 back stack 让用户可以回退
+transaction.replace(R.id.fragment_container, newFragment);
+transaction.addToBackStack(null);
+
+// 提交事务
+transaction.commit();
+```
+
+[addToBackStack()](https://developer.android.com/reference/android/support/v4/app/FragmentTransaction.html#addToBackStack(java.lang.String)) 方法接收一个可选字符串参数作为某个事务特定的唯一名称。如果你不使用 [FragmentManager.BackStackEntry](https://developer.android.com/reference/android/support/v4/app/FragmentManager.BackStackEntry.html) API 执行 fragment 的高级操作，则无需使用该名称。
 
 
