@@ -40,8 +40,8 @@ public class MainActivity extends FragmentActivity
             // 创建用于显示文章标题的 HeadlinesFragment 的实例
             HeadlinesFragment firstFragment = new HeadlinesFragment();
 
-            // In case this activity was started with special instructions from an Intent,
-            // pass the Intent's extras to the fragment as arguments
+            // 如果该 activity 由来自 Intent 的特殊指令启动，
+            // 传入 Intent 的 extras 作为 fragment 的参数
             firstFragment.setArguments(getIntent().getExtras());
 
             // 将 fragment 添加到 'fragment_container' FrameLayout
