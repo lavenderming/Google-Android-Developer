@@ -8,6 +8,10 @@
 - [更新数据库中的信息](#%E6%9B%B4%E6%96%B0%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E4%BF%A1%E6%81%AF)
 - [维持持久的数据库连接](#%E7%BB%B4%E6%8C%81%E6%8C%81%E4%B9%85%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5)
 
+# 还需阅读
+- [Saving Data Using the Room Persistence Library](https://developer.android.google.cn/training/basics/data-storage/room/index.html)
+- [Using Databases](https://developer.android.google.cn/guide/topics/data/data-storage.html#db)
+
 在 Android 中使用数据库的 API 位于 [android.database.sqlite](https://developer.android.google.cn/reference/android/database/sqlite/package-summary.html) 包中。
 
 > 注意：尽管这些 API 很强大，但是它们非常底层，需要大量时间及精力来使用，比如：
