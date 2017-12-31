@@ -35,10 +35,18 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_screen_slide);
 
-        // 实例化一个 ViewPager 和一个 PagerAdapter
+        // 将 Activity 布局上的 pager 绑定到 mPager 实例化一个 ViewPager 和一个 PagerAdapter
         mPager = (ViewPager) findViewById(R.id.pager);
+
+        // 实例化一个 PagerAdapter 并将其设为 mPager 的 adapter
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
     }
 
     /**
@@ -51,7 +59,13 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
 
         @Override
         public Fragment getItem(int position) {
-            return new ScreenSlidePageFragment();
+            ScreenSlidePageFragment screenSlidePageFragment = new ScreenSlidePageFragment();
+
+            Bundle bundle = new Bundle();
+            bundle.putInt(ScreenSlidePageFragment.ARGUMENTS_BUNDLE_KEY_POSITION, position);
+            screenSlidePageFragment.setArguments(bundle);
+
+            return screenSlidePageFragment;
         }
 
         @Override
