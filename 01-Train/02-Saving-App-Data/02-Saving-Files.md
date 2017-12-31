@@ -5,6 +5,7 @@
 - [选择内部或外部存储](#%E9%80%89%E6%8B%A9%E5%86%85%E9%83%A8%E6%88%96%E5%A4%96%E9%83%A8%E5%AD%98%E5%82%A8)
 - [获取外部存储权限](#%E8%8E%B7%E5%8F%96%E5%A4%96%E9%83%A8%E5%AD%98%E5%82%A8%E6%9D%83%E9%99%90)
 - [在内部存储中保存文件](#%E5%9C%A8%E5%86%85%E9%83%A8%E5%AD%98%E5%82%A8%E4%B8%AD%E4%BF%9D%E5%AD%98%E6%96%87%E4%BB%B6)
+- [把文件保存到外部存储](#%E6%8A%8A%E6%96%87%E4%BB%B6%E4%BF%9D%E5%AD%98%E5%88%B0%E5%A4%96%E9%83%A8%E5%AD%98%E5%82%A8)
 
 # 还需阅读
 - [Using the Internal Storage](https://developer.android.google.cn/guide/topics/data/data-storage.html#filesInternal)
@@ -68,6 +69,107 @@ Android 使用的文件系统类似于其它平台的基于磁盘的文件系统
 你无需任何权限来把文件保存到内部存储。你的 app 总是有权限在其内部存储目录中读取与写入文件。
 
 # 在内部存储中保存文件
+当向内部存储保存文件时，你可以通过调用下列两种方法之一获取适合的目录，目录作 [File](https://developer.android.com/reference/java/io/File.html) 类型返回：
 
+- [getFilesDir()](https://developer.android.com/reference/android/content/Context.html#getFilesDir()) 
+
+    返回一个表示你 app 内部存储目录的 [File](https://developer.android.com/reference/java/io/File.html)
+
+- [getCacheDir()](https://developer.android.com/reference/android/content/Context.html#getCacheDir()) 
+
+    返回 [File](https://developer.android.com/reference/java/io/File.html) 对象，该对象表示内部存储中用于保存你 app 缓存文件的目录。确保在文件不再需要时删除且在你使用任何时间限定一个合理的大小限制，如 1MB。当系统存储低时，系统会没有提示地删除缓存文件。
+
+为在这些文件夹中创建文件，你可以使用 [File()](https://developer.android.com/reference/java/io/File.html#File(java.io.File,java.lang.String)) 构造函数，第一个参数传入由上面方法创建的内部存储目录，第二个方法指定要创建的文件名：
+
+```java
+File file = new File(context.getFilesDir(), filename);
+```
+
+此外，你也可以调用 [Context](https://developer.android.com/reference/android/content/Context.html) 的 [openFileOutput()](https://developer.android.com/reference/android/content/Context.html#openFileOutput(java.lang.String,int)) 来获取内部存储中文件的 [FileOutputStream](https://developer.android.com/reference/java/io/FileOutputStream.html) 并向其中写入数据。例如，下面的例子展示了如何向文件中写入一些文本：
+
+```java
+String filename = "myfile";
+String string = "Hello world!";
+FileOutputStream outputStream;
+
+try {
+    outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+    outputStream.write(string.getBytes());
+    outputStream.close();
+} catch (Exception e) {
+    e.printStackTrace();
+}
+```
+
+或者你需要缓存一些文件，你可以使用 [createTempFile()](https://developer.android.com/reference/java/io/File.html#createTempFile(java.lang.String,java.lang.String))。例如，下面的方法从 [URL](https://developer.android.com/reference/java/net/URL.html) 中提取文件名，然后用该文件名在内部缓存文件夹中创建文件：
+
+```java
+public File getTempFile(Context context, String url) {
+    File file;
+    try {
+        String fileName = Uri.parse(url).getLastPathSegment();
+        file = File.createTempFile(fileName, null, context.getCacheDir());
+    } catch (IOException e) {
+        // 创建文件过程中的错误
+    }
+    return file;
+}
+```
+
+> **笔记：** 你 app 的内部存储目录在 android 文件系统的特殊位置，由你 app 的包名生成。技术上讲，如果你把文件模式设为 `readable`，则其它 app 可以读取你的内部存储中的文件；当然，则需要其他 app 知道你 app 的包名以及文件名。除非你显式设置文件为可读或可写，否则其它 app 不能浏览你的内部文件夹以及没有你文件的读写权限。所以只要你对你内部存储中的文件使用 [MODE_PRIVATE](https://developer.android.com/reference/android/content/Context.html#MODE_PRIVATE)，它就不会被其它 app 访问。
+
+# 把文件保存到外部存储
+由于外部存储可能无法使用 —— 比如当存储连接到 PC 或移除提供外部存储的 SD 卡 —— 你应该在每次访问它前检查它是否可用。你可以通过调用 [Environment](https://developer.android.com/reference/android/os/Environment.html) 的 [getExternalStorageState()](https://developer.android.com/reference/android/os/Environment.html#getExternalStorageState()) 查询外部存储的状态，如果它的返回值等于 [MEDIA_MOUNTED](https://developer.android.com/reference/android/os/Environment.html#MEDIA_MOUNTED)，那么你可以读取或写入文件。例如，你可以用下面的方法检测外部存储是否可用：
+
+```java
+/* 检测外部存储是否可读也可写 */
+public boolean isExternalStorageWritable() {
+    String state = Environment.getExternalStorageState();
+    if (Environment.MEDIA_MOUNTED.equals(state)) {
+        return true;
+    }
+    return false;
+}
+
+/* 检测外部存储至少可写 */
+public boolean isExternalStorageReadable() {
+    String state = Environment.getExternalStorageState();
+    if (Environment.MEDIA_MOUNTED.equals(state) ||
+        Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+        return true;
+    }
+    return false;
+}
+```
+
+尽管外部存储会被用户或其它 app 改变，但仍有两类的文件你可以保存在这：
+
+- 公开文件
+    
+    可以自由被其它 app 和用户使用的文件。当用户卸载你的 app，这些文件仍然对用户可用。
+
+    例如，由你的 app 获取的图片或其它下载的文件。
+
+- 私有文件
+
+    那些属于你 app 且在用户卸载 app 后应该被删除的文件。尽管这些文件由于保存于外部存储，技术上可以被用户以及其它 app 访问，但它们不会为你 app 外的其它使用提供价值。当用户卸载你的 app 后，系统删除所有你 app 外部私有目录中的文件。
+
+    例如，由你 app 下载的额外资源或临时媒体文件。
+
+如果你想在外部存储上保存公共文件，使用 [Environment](https://developer.android.com/reference/android/os/Environment.html) 的 [getExternalStoragePublicDirectory()](https://developer.android.com/reference/android/os/Environment.html#getExternalStoragePublicDirectory(java.lang.String)) 方法获取外部存储上的适合文件夹，文件夹以 [File](https://developer.android.com/reference/java/io/File.html) 类型返回。该方法接收一个指定你想保存的文件的类型的参数，比如 [DIRECTORY_MUSIC](https://developer.android.com/reference/android/os/Environment.html#DIRECTORY_MUSIC) 或 [DIRECTORY_PICTURES](https://developer.android.com/reference/android/os/Environment.html#DIRECTORY_PICTURES)，据此，文件可以和其它同类型公共文件保存在一起。例如：
+
+```java
+public File getAlbumStorageDir(String albumName) {
+    // 获取用户公共图片目录并将文件保存于其下
+    File file = new File(
+        Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_PICTURES), 
+        albumName);
+    if (!file.mkdirs()) {
+        Log.e(LOG_TAG, "Directory not created");
+    }
+    return file;
+}
+```
 
 
