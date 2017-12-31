@@ -1,0 +1,55 @@
+#-------- 原生 .gitignore start -------
+
+#*.iml
+#.gradle
+#/local.properties
+#/.idea/workspace.xml
+#/.idea/libraries
+#.DS_Store
+#/build
+#/captures
+#.externalNativeBuild
+
+#-------- 原生 .gitignore end --------
+
+#-------- 自定义 .gitignore start ----
+#----参考：https://stackoverflow.com/questions/16736856/what-should-be-in-my-gitignore-for-an-android-studio-project
+
+#built application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# generated files
+bin/
+gen/
+
+# 本地配置文件 (sdk 路径等)
+local.properties
+
+# Windows thumbnail db
+Thumbs.db
+
+# OSX 文件
+.DS_Store
+
+# Android Studio
+*.iml
+.idea
+#.idea/workspace.xml - 移除 # 并删掉 .idea 如果你觉得能更符合你的需求.
+.gradle
+build/
+.navigation
+captures/
+output.json 
+
+#NDK
+obj/
+.externalNativeBuild
+
+#-------- 自定义 .gitignore end ----
