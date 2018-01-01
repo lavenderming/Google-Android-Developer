@@ -263,4 +263,79 @@ public class SettingsActivity extends PreferenceActivity {
 
 # 使用 Preference Fragments
 
+如果你为 android 3.0 以及更高版本 开发 app，你应该使用 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html) 来显示你的一列 [Preference](https://developer.android.com/reference/android/preference/Preference.html) 对象。你可以把一个 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html) 添加到任何 activity —— 你不需要使用 [PreferenceActivity](https://developer.android.com/reference/android/preference/PreferenceActivity.html)
+
+不论你使用的是哪一种 activity，[Fragments](https://developer.android.com/guide/components/fragments.html) 总能提供比单独使用 activity 更灵活的架构。比如，我们建议你只要可能就使用 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html) 来显示你的设置项而不是用 [PreferenceActivity](https://developer.android.com/reference/android/preference/PreferenceActivity.html)。
+
+最简单实现 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html) 的方式是重写 [onCreate()](https://developer.android.com/reference/android/preference/PreferenceFragment.html#onCreate(android.os.Bundle)) 方法，在其中通过 [addPreferencesFromResource()](https://developer.android.com/reference/android/preference/PreferenceFragment.html#addPreferencesFromResource(int)) 加载 preferences 文件。例如：
+
+```java
+public static class SettingsFragment extends PreferenceFragment {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // 从 XML 资源中加载 preferences 
+        addPreferencesFromResource(R.xml.preferences);
+    }
+    ...
+}
+```
+
+把这个 Fragment 像一般的 [Fragment](https://developer.android.com/reference/android/app/Fragment.html) 一样添加到一个 [Activity](https://developer.android.com/reference/android/app/Activity.html) 上。例如：
+
+```java
+public class SettingsActivity extends Activity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // 将 fragment 作为 main content 显示
+        getFragmentManager().beginTransaction()
+                .replace(android.R.id.content, new SettingsFragment())
+                .commit();
+    }
+}
+```
+
+> **笔记：** [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html) 没有自己独有的 [Context](https://developer.android.com/reference/android/content/Context.html) 对象。如果你需要一个 [Context](https://developer.android.com/reference/android/content/Context.html) 对象，你可以调用 [getActivity()](https://developer.android.com/reference/android/app/Fragment.html#getActivity())。但调用 [getActivity()](https://developer.android.com/reference/android/app/Fragment.html#getActivity()) 时要小心，因为 fragment 只有 attach 到一个 activity 上后，[getActivity()](https://developer.android.com/reference/android/app/Fragment.html#getActivity()) 才会返回你预期的值，在 fragment 还没有 attach，或是在生命周期的最后 fragment 已经 detach 了，[getActivity()](https://developer.android.com/reference/android/app/Fragment.html#getActivity()) 会返回 `null`。
+
+# 设置默认值
+
+你创建的 preferences 可能为你的 app 定义了一些重要的行为，所以在用户第一次打开你的 app 时用各个 [Preference](https://developer.android.com/reference/android/preference/Preference.html) 的默认值来初始化相关的 [SharedPreferences](https://developer.android.com/reference/android/content/SharedPreferences.html) 文件是必要的。
+
+你必须要做的第一件事是用 `android:defaultValue` 属性对 XML 文件中的每个 [Preference](https://developer.android.com/reference/android/preference/Preference.html) 对象设定默认值。该值可以是适合对应 [Preference](https://developer.android.com/reference/android/preference/Preference.html) 对象的任意数据类型。例如：
+
+```java
+<!-- 默认值是 boolean 类型 -->
+<CheckBoxPreference
+    android:defaultValue="true"
+    ... />
+
+<!-- 默认值是 string 类型 -->
+<ListPreference
+    android:defaultValue="@string/pref_syncConnectionTypes_default"
+    ... />
+```
+
+然后，在 app main activity 的 [onCreate()](https://developer.android.com/reference/android/app/Activity.html#onCreate(android.os.Bundle)) 方法 —— 或在任何其它用户可以首次进入你 app 的 activity 中 —— 调用 [setDefaultValues()](https://developer.android.com/reference/android/preference/PreferenceManager.html#setDefaultValues(android.content.Context,int,boolean))：
+
+```java
+PreferenceManager.setDefaultValues(this, R.xml.advanced_preferences, false);
+```
+
+在 [onCreate()](https://developer.android.com/reference/android/app/Activity.html#onCreate(android.os.Bundle)) 中调用该方法可以确保你的 app 按默认设置做适合的初始化，如一些能决定行为的值（比如手机处于蜂窝网络时是否下载数据）。
+
+该方法接受三个参数：
+
+- 你的 application [Context](https://developer.android.com/reference/android/content/Context.html)
+- 你想设置默认值的 preferences XML 文件的资源 ID
+- 一个 boolean 来指示默认值是否需要被设置超过一次
+    为 `false`，系统只在该方法之前从没被调用过的情况下设置默认值（或者默认 shared preferences 文件中的 [KEY_HAS_SET_DEFAULT_VALUES](https://developer.android.com/reference/android/preference/PreferenceManager.html#KEY_HAS_SET_DEFAULT_VALUES) 被设为 `false`）
+
+> 阿懂的笔记：利用 [KEY_HAS_SET_DEFAULT_VALUES](https://developer.android.com/reference/android/preference/PreferenceManager.html#KEY_HAS_SET_DEFAULT_VALUES) 似乎可以很方便地恢复默认值～
+
+只要你将第三个参数设置为 `false`，你可以每次 activity 启动时都调用该方法而不必担心它会把用户的设置覆盖成默认值。但是，如果你设定为 `true`，则每次调用都会把先前的值覆盖为默认值。
+
+# 使用 Preference Headers
 
