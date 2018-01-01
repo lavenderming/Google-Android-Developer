@@ -6,6 +6,8 @@
 - [获取外部存储权限](#%E8%8E%B7%E5%8F%96%E5%A4%96%E9%83%A8%E5%AD%98%E5%82%A8%E6%9D%83%E9%99%90)
 - [在内部存储中保存文件](#%E5%9C%A8%E5%86%85%E9%83%A8%E5%AD%98%E5%82%A8%E4%B8%AD%E4%BF%9D%E5%AD%98%E6%96%87%E4%BB%B6)
 - [把文件保存到外部存储](#%E6%8A%8A%E6%96%87%E4%BB%B6%E4%BF%9D%E5%AD%98%E5%88%B0%E5%A4%96%E9%83%A8%E5%AD%98%E5%82%A8)
+- [查询可用空间](#%E6%9F%A5%E8%AF%A2%E5%8F%AF%E7%94%A8%E7%A9%BA%E9%97%B4)
+- [删除文件](#%E5%88%A0%E9%99%A4%E6%96%87%E4%BB%B6)
 
 # 还需阅读
 - [Using the Internal Storage](https://developer.android.google.cn/guide/topics/data/data-storage.html#filesInternal)
@@ -160,7 +162,7 @@ public boolean isExternalStorageReadable() {
 
 ```java
 public File getAlbumStorageDir(String albumName) {
-    // 获取用户公共图片目录并将文件保存于其下
+    // 在用户公共图片目录下创建一个目录
     File file = new File(
         Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_PICTURES), 
@@ -171,5 +173,37 @@ public File getAlbumStorageDir(String albumName) {
     return file;
 }
 ```
+
+若没有符合你要求的预定义子文件夹，你还可以调用 [getExternalFilesDir()](https://developer.android.com/reference/android/content/Context.html#getExternalFilesDir(java.lang.String)) 并传入 `null`。这返回 app 在外部存储的私有根目录。
+
+切记调用 [getExternalFilesDir()](https://developer.android.com/reference/android/content/Context.html#getExternalFilesDir(java.lang.String)) 创建的文件夹的父文件夹在用户卸载 app 时会被删除。如果你要保存的文件在用户卸载 app 后仍然可用 —— 比如你的 app 是相机 app 且用户希望在卸载后保留照片 —— 那你应该使用 [getExternalStoragePublicDirectory()](https://developer.android.com/reference/android/os/Environment.html#getExternalStoragePublicDirectory(java.lang.String))
+
+不管调用 [getExternalStoragePublicDirectory()](https://developer.android.com/reference/android/os/Environment.html#getExternalStoragePublicDirectory(java.lang.String)) 保存可以共享的文件还是调用 [getExternalFilesDir()](https://developer.android.com/reference/android/content/Context.html#getExternalFilesDir(java.lang.String)) 保存 app 私有的文件，你的文件夹名都应该使用由 API 提供的常量，比如：[DIRECTORY_PICTURES](https://developer.android.com/reference/android/os/Environment.html#DIRECTORY_PICTURES)。这些文件夹名确保文件被系统以合适的方式对待。例如，保存在 [DIRECTORY_RINGTONES](https://developer.android.com/reference/android/os/Environment.html#DIRECTORY_RINGTONES) 文件夹下的文件会被系统多媒体浏览器归类为铃声而不是音乐。
+
+# 查询可用空间
+
+如果你可以提前知道你需要保存多少数据，你可以通过调用 [getFreeSpace()](https://developer.android.com/reference/java/io/File.html#getFreeSpace()) 或 [getTotalSpace()](https://developer.android.com/reference/java/io/File.html#getTotalSpace()) 计算是否有足够的可用容量而不导致 [IOException](https://developer.android.com/reference/java/io/IOException.html)。这俩方法分别提供了当前可用容量以及存储总容量。这些信息对于防止存储高于某个阈值也是有用的。
+
+但是系统不保证你可以写入 [getFreeSpace()](https://developer.android.com/reference/java/io/File.html#getFreeSpace()) 返回所代表的字节的数据。如果返回的数字比你想保存的数据大几 MB，或文件系统还没超过 90%，那么保存数据应该是安全的。否则，你应该不写入数据。
+
+> **笔记：** 你不需要在保存文件前检测可用容量。你可以直接写入文件，然后 `catch` 可能产生的 [IOException](https://developer.android.com/reference/java/io/IOException.html)。比如你不知道你到底需要多少空间的时候。具体来说，如果你想在保存文件前改变文件的编码，比如把 `PNG` 的图片转为 `JPEG` 格式，在完成前你无法知道文件的大小。
+
+# 删除文件
+你应该总是把你不再需要的文件删除。最直接的删除方式是获取文件的引用后直接调用其上的 [delete()](https://developer.android.com/reference/java/io/File.html#delete())。
+```java
+myFile.delete();
+``` 
+
+如果文件保存在内部存储，你还可以通过 [Context](https://developer.android.com/reference/android/content/Context.html) 的 [deleteFile()](https://developer.android.com/reference/android/content/Context.html#deleteFile(java.lang.String)) 定位并删除文件：
+
+```java
+myContext.deleteFile(fileName);
+```
+
+> **笔记：** 当用户卸载你的 app 时，系统会删除如下文件：
+> - 所有你保存在内部存储中的文件
+> - 所有你通过 [getExternalFilesDir()](https://developer.android.com/reference/android/content/Context.html#getExternalFilesDir(java.lang.String)) 保存在外部存储中的东西。
+>
+> 但你仍应该人为地定期删除通过 [getCacheDir()](https://developer.android.com/reference/android/content/Context.html#getCacheDir()) 创建的缓存文件，并且还应该定期删除你不再需要的文件。
 
 
