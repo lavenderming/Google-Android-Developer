@@ -12,6 +12,12 @@
     - [使用 intent](#%E4%BD%BF%E7%94%A8-intent)
 - [创建 Perference Activity](#%E5%88%9B%E5%BB%BA-perference-activity)
 - [使用 Preference Fragments](#%E4%BD%BF%E7%94%A8-preference-fragments)
+- [设置默认值](#%E8%AE%BE%E7%BD%AE%E9%BB%98%E8%AE%A4%E5%80%BC)
+- [使用 Preference Headers](#%E4%BD%BF%E7%94%A8-preference-headers)
+    - [创建 headers 文件](#%E5%88%9B%E5%BB%BA-headers-%E6%96%87%E4%BB%B6)
+    - [显示 headers](#%E6%98%BE%E7%A4%BA-headers)
+    - [支持旧版本的 preference headers](#%E6%94%AF%E6%8C%81%E6%97%A7%E7%89%88%E6%9C%AC%E7%9A%84-preference-headers)
+- [读取 Preferences](#%E8%AF%BB%E5%8F%96-preferences)
 
 # 核心类
 - [Preference](https://developer.android.com/reference/android/preference/Preference.html)
@@ -338,4 +344,181 @@ PreferenceManager.setDefaultValues(this, R.xml.advanced_preferences, false);
 只要你将第三个参数设置为 `false`，你可以每次 activity 启动时都调用该方法而不必担心它会把用户的设置覆盖成默认值。但是，如果你设定为 `true`，则每次调用都会把先前的值覆盖为默认值。
 
 # 使用 Preference Headers
+
+在极少情况下，你可能想把你设置的第一屏设计为仅显示一列子屏列表（如图4.和图5.展示的系统设置 app）。当你在 Android 3.0 及以上开发时，如果你想这么设计，你应该使用 “headers” 功能而不是用内嵌的 [PreferenceScreen](https://developer.android.com/reference/android/preference/PreferenceScreen.html) 元素
+
+为使用 headers 构建你的设置，你应该：
+
+1. 分离各组设置项到各自的 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html)。即，各组设置项都需要有独立的 XML 文件。
+1. 创建列出各组的 headers XML 文件，声明哪个 fragment 包含对应的设置项列表。
+1. 继承 [PreferenceActivity](https://developer.android.com/reference/android/preference/PreferenceActivity.html) 类来包含你的设置。
+1. 实现 [PreferenceActivity](https://developer.android.com/reference/android/preference/PreferenceActivity.html) 的 [onBuildHeaders()](https://developer.android.com/reference/android/preference/PreferenceActivity.html#onBuildHeaders(java.util.List<android.preference.PreferenceActivity.Header>)) 回调函数来设置 headers 文件
+
+使用这种设计的好处在于，[PreferenceActivity](https://developer.android.com/reference/android/preference/PreferenceActivity.html) 会自动在大屏上表现成双面板布局，如图4.所示。
+
+即使你的 app 支持 Android 3.0 以前的版本，你可以使用 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html) 构建你的 app，让其在新设备上表现出双面板而在旧设备上仍支持传统的多屏层级结构（见：[Supporting older versions with preference headers](https://developer.android.com/guide/topics/ui/settings.html#BackCompatHeaders) 章节）。
+
+> ![](https://developer.android.com/images/ui/settings/settings-headers-tablet.png)
+**图4.** 使用 headers 的双面板布局
+> 1. headers 通过 XML headers 文件定义
+> 1. 每组设置项通过 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html) 定义，该 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html) 会在 headers 文件中被 `<header>` 元素指定。
+
+> ![](https://developer.android.com/images/ui/settings/settings-headers-handset.png)
+**图5.** 使用 headers 的手持设备。当某个 item 被选中，关联的 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html) 会替换 headers。
+
+## 创建 headers 文件
+
+各组的设置项在 headers 中是由单个的 `<header>` 元素设置的，这些 `<header>` 元素处于根元素 `<preference-headers>` 内。栗子：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+    <header
+        android:fragment="com.example.prefs.SettingsActivity$SettingsFragmentOne"
+        android:title="@string/prefs_category_one"
+        android:summary="@string/prefs_summ_category_one" />
+    <header
+        android:fragment="com.example.prefs.SettingsActivity$SettingsFragmentTwo"
+        android:title="@string/prefs_category_two"
+        android:summary="@string/prefs_summ_category_two" >
+        <!-- 键值对可以被包含进来作为 fragment 的参数 -->
+        <extra android:name="someKey" android:value="someHeaderValue" />
+    </header>
+</preference-headers>
+```
+
+通过 `android:fragment` 属性，每个 header 定义了一个 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html) 实例，当用户选择 header 时，该实例会被打开。
+
+`<extras>` 元素允许你向 fragment 传入保存在 [Bundle](https://developer.android.com/reference/android/os/Bundle.html) 中的键值对。fragment 可以通过调用 [getArguments()](https://developer.android.com/reference/android/app/Fragment.html#getArguments()) 获取这些参数。你可能由于各种各样的理由向 fragment 传入参数，但一个好理由是你可以对各组设置项复用同一个 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html) 子类，然后通过参数指定 fragment 应该加载哪个 preferences XML 文件。
+
+例如，这有个可以给多个设置组使用的 fragment，只要定义每个 header 时设置 `<extra>` 参数的键为：`settings`：
+
+```java
+public static class SettingsFragment extends PreferenceFragment {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        String settings = getArguments().getString("settings");
+        if ("notifications".equals(settings)) {
+            addPreferencesFromResource(R.xml.settings_wifi);
+        } else if ("sync".equals(settings)) {
+            addPreferencesFromResource(R.xml.settings_sync);
+        }
+    }
+}
+```
+
+## 显示 headers
+
+为显示 preferences headers，你必须实现 [onBuildHeaders()](https://developer.android.com/reference/android/preference/PreferenceActivity.html#onBuildHeaders(java.util.List<android.preference.PreferenceActivity.Header>)) 回调方法并调用 [loadHeadersFromResource()](https://developer.android.com/reference/android/preference/PreferenceActivity.html#loadHeadersFromResource(int,java.util.List<android.preference.PreferenceActivity.Header>)) 例如：
+
+```java
+public class SettingsActivity extends PreferenceActivity {
+    @Override
+    public void onBuildHeaders(List<Header> target) {
+        loadHeadersFromResource(R.xml.preference_headers, target);
+    }
+}
+```
+
+当用户从一列的 headers 中选中某项时，系统会打开关联的 [PreferenceFragment](https://developer.android.com/reference/android/preference/PreferenceFragment.html)。
+
+> **笔记：** 当你使用 preference headers，你的 [PreferenceActivity](https://developer.android.com/reference/android/preference/PreferenceActivity.html) 子类无需实现 [onCreate()](https://developer.android.com/reference/android/preference/PreferenceActivity.html#onCreate(android.os.Bundle)) 方法，因为该 activity 的唯一作用就是加载 headers。
+
+## 支持旧版本的 preference headers
+
+如果你的 app 支持 Android 3.0 之前的版本，你仍然可以向 Android 3.0 以及之后的版本提供使用 headers 的双面板布局。你需要做的只是创建一个额外的使用基础 [`<Preference>`](https://developer.android.com/reference/android/preference/Preference.html) 的 XML 文件，并使它的行为类似 header 项（在旧版 Android 中使用）。
+
+不打开新的 [PreferenceScreen](https://developer.android.com/reference/android/preference/PreferenceScreen.html)，每个 [`<Preference>`](https://developer.android.com/reference/android/preference/Preference.html) 元素向 [PreferenceActivity](https://developer.android.com/reference/android/preference/PreferenceActivity.html) 发送一个 [Intent](https://developer.android.com/reference/android/content/Intent.html) 指定其加载某个 preference XML 文件。
+
+例如，这是个用在 Android 3.0 以及之后的 preference headers XML 文件（`res/xml/preference_headers.xml`）：
+```xml
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+    <header
+        android:fragment="com.example.prefs.SettingsFragmentOne"
+        android:title="@string/prefs_category_one"
+        android:summary="@string/prefs_summ_category_one" />
+    <header
+        android:fragment="com.example.prefs.SettingsFragmentTwo"
+        android:title="@string/prefs_category_two"
+        android:summary="@string/prefs_summ_category_two" />
+</preference-headers>
+```
+
+为 Android 3.0 之前的版本提供同样 headers 的 preference 文件（`res/xml/preference_headers_legacy.xml`）：
+```xml
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference
+        android:title="@string/prefs_category_one"
+        android:summary="@string/prefs_summ_category_one"  >
+        <intent
+            android:targetPackage="com.example.prefs"
+            android:targetClass="com.example.prefs.SettingsActivity"
+            android:action="com.example.prefs.PREFS_ONE" />
+    </Preference>
+    <Preference
+        android:title="@string/prefs_category_two"
+        android:summary="@string/prefs_summ_category_two" >
+        <intent
+            android:targetPackage="com.example.prefs"
+            android:targetClass="com.example.prefs.SettingsActivity"
+            android:action="com.example.prefs.PREFS_TWO" />
+    </Preference>
+</PreferenceScreen>
+```
+
+由于对 `<preference-headers>` 的支持在 Android 3.0 时才加入，所以只有在 Android 3.0 以及以后的版本中系统才会调用 [PreferenceActivity](https://developer.android.com/reference/android/preference/PreferenceActivity.html) 中的 [onBuildHeaders()](https://developer.android.com/reference/android/preference/PreferenceActivity.html#onBuildHeaders(java.util.List<android.preference.PreferenceActivity.Header>))。为载入 “legacy” headers 文件（`preference_headers_legacy.xml`），你必须检测 Android 版本，若版本低于 Android 3.0（[HONEYCOMB](https://developer.android.com/reference/android/os/Build.VERSION_CODES.html#HONEYCOMB)），调用 [addPreferencesFromResource()](https://developer.android.com/reference/android/preference/PreferenceActivity.html#addPreferencesFromResource(int)) 加载 legacy header 文件。例如：
+```java
+@Override
+public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    ...
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+        // 加载 legacy preferences headers
+        addPreferencesFromResource(R.xml.preference_headers_legacy);
+    }
+}
+
+// 只在 Honeycomb 和后面的版本中被调用
+@Override
+public void onBuildHeaders(List<Header> target) {
+   loadHeadersFromResource(R.xml.preference_headers, target);
+}
+```
+
+现在还剩下处理传入的 [Intent](https://developer.android.com/reference/android/content/Intent.html) 来决定加载哪个 preference 文件。所以要将获取到的 intent 的 action 和已知的 action 字符串（preference XML 文件的 `<intent>` 中定义的 action 串）比较：
+
+```java
+final static String ACTION_PREFS_ONE = "com.example.prefs.PREFS_ONE";
+...
+
+@Override
+public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    String action = getIntent().getAction();
+    if (action != null && action.equals(ACTION_PREFS_ONE)) {
+        addPreferencesFromResource(R.xml.preferences);
+    }
+    ...
+
+    else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+        // 加载 legacy preferences headers
+        addPreferencesFromResource(R.xml.preference_headers_legacy);
+    }
+}
+```
+
+注意连续地调用 [addPreferencesFromResource()](https://developer.android.com/reference/android/preference/PreferenceActivity.html#addPreferencesFromResource(int)) 会把所有添加的 preference 资源文件 stack 到一个单列中，所以这里要通过链接的 else-if 条件语句确保它只调用一次。
+
+# 读取 Preferences
+
+默认情况下，你 app 的所有 preference 都被保存在一个文件中，该文件可以通过调用静态方法 [PreferenceManager.getDefaultSharedPreferences()](https://developer.android.com/reference/android/preference/PreferenceManager.html#getDefaultSharedPreferences(android.content.Context)) 在 app 内的任意地方访问。
+
+该方法返回的 [SharedPreferences](https://developer.android.com/reference/android/content/SharedPreferences.html) 对象包含你在
+
+
+
 
