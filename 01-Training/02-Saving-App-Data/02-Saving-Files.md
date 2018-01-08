@@ -133,7 +133,7 @@ public boolean isExternalStorageWritable() {
     return false;
 }
 
-/* 检测外部存储至少可写 */
+/* 检测外部存储至少可读 */
 public boolean isExternalStorageReadable() {
     String state = Environment.getExternalStorageState();
     if (Environment.MEDIA_MOUNTED.equals(state) ||
