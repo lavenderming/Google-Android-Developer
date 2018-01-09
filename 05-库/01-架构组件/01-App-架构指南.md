@@ -6,6 +6,10 @@
 - [推荐的 app 架构](#%E6%8E%A8%E8%8D%90%E7%9A%84-app-%E6%9E%B6%E6%9E%84)
     - [构建用户界面](#%E6%9E%84%E5%BB%BA%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2)
     - [获取数据](#%E8%8E%B7%E5%8F%96%E6%95%B0%E6%8D%AE)
+        - [管理组件间的依赖](#%E7%AE%A1%E7%90%86%E7%BB%84%E4%BB%B6%E9%97%B4%E7%9A%84%E4%BE%9D%E8%B5%96)
+    - [连接 ViewModel 和 repository](#%E8%BF%9E%E6%8E%A5-viewmodel-%E5%92%8C-repository)
+    - [缓存数据](#%E7%BC%93%E5%AD%98%E6%95%B0%E6%8D%AE)
+    - [持久化保存数据](#%E6%8C%81%E4%B9%85%E5%8C%96%E4%BF%9D%E5%AD%98%E6%95%B0%E6%8D%AE)
 
 # 概述
 该指南适用于那些过去是基础 app 开发人员，而如今想了解构建健壮、生产级质量的 app 的最佳实践和推荐架构。
@@ -144,5 +148,171 @@ public interface Webservice {
     Call<User> getUser(@Path("user") String userId);
 }
 ``` 
+
+`ViewModel` 的一种幼稚实现是直接调用 `Webservice` 来获取数据并将其赋值给 user 对象。即使这样可以运行，随着你 app 的增长，代码将极难维持。因为这样做给 ViewModel 类太多职责，这样违背了我们之前提到的 *关注点分离* 原则。此外，ViewModel 的生存期与 [Activity](https://developer.android.com/reference/android/app/Activity.html) 或 
+[Fragment](https://developer.android.com/reference/android/app/Fragment.html) 的生命周期紧密联系，所以当生命周期结束便会丢失所有数据，这是种差的用户体验。所以，我们的 ViewModel 应该将该功能委托给 **Repository** 模块。
+
+**Repository** 模块负责处理数据操作。它们向 app 的其余部分提供了干净的 API。它们知晓从哪获取数据以及从什么 API 更新数据。你可以把 Repository 视为不同数据源（持久模型、web 服务、缓存等）间的协调者。
+
+下面展示的 `UserRepository` 类使用 `WebService` 来获取用户数据项：
+
+```java
+public class UserRepository {
+    private Webservice webservice;
+    // ...
+    public LiveData<User> getUser(int userId) {
+        // 这不是最优实现, 我们会在后面修复
+        final MutableLiveData<User> data = new MutableLiveData<>();
+        webservice.getUser(userId).enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                // 为简洁起见此处省略错误
+                data.setValue(response.body());
+            }
+        });
+        return data;
+    }
+}
+```
+
+尽管 repository 模块看起来没有必要，但它起了很重要的作用：它为 app 的其它部分抽象了数据源。现在 ViewModel 不知道数据是通过 `Webservice` 获取的，这意味着我们可以在需要时将其替换为其它实现。
+
+> **笔记：** 为简洁起见我们忽略了网络错误。关于另一种显示错误和加载状态的实现，见 [Addendum: exposing network status](https://developer.android.com/topic/libraries/architecture/guide.html#addendum)。
+
+### 管理组件间的依赖
+上面的 `UserRepository` 类需要一个 `Webservice` 实例来完成工作。`UserRepository` 可以简单创建一个 `Webservice` 实例，但这样做需要 `UserRepository` 知道 `Webservice` 类的依赖来构建 `Webservice`。这将是非常复杂且重复的代码（比如：每个需要 `Webservice` 实例的类都需要知道如何通过 `Webservice` 的依赖来创建 `Webservice`）。此外，`UserRepository` 可能不是唯一需要 `Webservice` 的类，如果每个需要的类都创建一个新的 `Webservice`，这是非常消耗资源的。
+
+这有两种模式你可以用来解决这个问题：
+- [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection)：依赖注入允许类定义它们的依赖而无需创建它们。在运行时，其它类有职责提供这些依赖。我们推荐在 Android app 中使用 Google 的 [Dagger 2](https://google.github.io/dagger/) 库来实现依赖。Dagger 2 通过遍历依赖关系树来自动构建对象，并为依赖关系提供编译时检测。
+
+- [Service Locator](https://en.wikipedia.org/wiki/Service_locator_pattern)：服务定位器提供一个注册点，在这里类可以获取它们依赖而不用创建依赖对象。这相对于依赖注入实现起来较为简单，所以如果你不熟悉依赖注入，可以使用服务定位器来替代。
+
+这些模式允许你规模化你的代码，因为它们为管理依赖提供了清晰的模式，且不会重复代码或增加复杂性。它们两者都能为测试替换实现，这也是用它们的主要好处之一。
+
+在这个例子中，我们要使用 [Dagger 2](https://google.github.io/dagger/) 来管理依赖。
+
+## 连接 ViewModel 和 repository
+
+现在我们修改 `UserProfileViewModel` 来使用 repository：
+
+```java
+public class UserProfileViewModel extends ViewModel {
+    private LiveData<User> user;
+    private UserRepository userRepo;
+
+    @Inject // UserRepository 参数由 Dagger 2 提供
+    public UserProfileViewModel(UserRepository userRepo) {
+        this.userRepo = userRepo;
+    }
+
+    public void init(String userId) {
+        if (this.user != null) {
+            // 每个 Fragment 都会创建对应的 ViewModel
+            // 所以我们知道 userId 不会变化
+            return;
+        }
+        user = userRepo.getUser(userId);
+    }
+
+    public LiveData<User> getUser() {
+        return this.user;
+    }
+}
+```
+
+## 缓存数据
+
+上面实现的 repository 很好地对 web 服务的调用进行了抽象，但由于它只依赖于一个数据源，还不是很实用。
+
+上面实现的 `UserRepository` 的问题是在获取数据后，它没有在任何地方保存该数据。如果用户离开 `UserProfileFragment` 再返回，app 需要重新获取数据。两种理由可以说明这种方式的不好之处：一方面浪费了珍贵的网络带宽，另一方面强迫用户等待新的查询执行完毕。为处理这个问题，我们要给 `UserRepository` 添加新的数据源将 `User` 对象缓存在内存中。
+
+```java
+@Singleton  // 告知 Dagger 该类应该只创建一次
+public class UserRepository {
+    private Webservice webservice;
+    // 简单的内存缓存，为简略省略细节
+    private UserCache userCache;
+    public LiveData<User> getUser(String userId) {
+        LiveData<User> cached = userCache.get(userId);
+        if (cached != null) {
+            return cached;
+        }
+
+        final MutableLiveData<User> data = new MutableLiveData<>();
+        userCache.put(userId, data);
+        // 这仍然不是最好的但已比之前好了
+        // 完整的实现必须处理错误情况
+        webservice.getUser(userId).enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                data.setValue(response.body());
+            }
+        });
+        return data;
+    }
+}
+```
+
+## 持久化保存数据
+
+在我们当前的实现中，如果用户旋转屏幕或离开然后返回 app，现有的 UI 会立即可见，因为 repository 从内存缓存取回数据。但用户离开 app 一小时，在 Android 系统杀死进程后返回会发生什么呢？
+
+在当前的实现中，我们需要重新从网络获取数据。这不仅用户体验差，而且用移动网络重新获取相同数据很浪费。你可以简单地通过缓存 web 请求来修复这个问题，但这又造成新问题。如果显示的用户数据来自其它类型的请求（比如获取一列好友）会发生什么？那样你的 app 可能会显示不一致的数据，这是一种混乱的用户体验。例如，同种的用户数据可能不一致，因为好友列表请求和用户请求可能在不同的时间执行。你的 app 需要合并它们来防止展示不一致的数据。
+
+处理这种情况的一种适合方式是使用持久模型。这就到了 [Room](https://developer.android.com/training/data-storage/room/index.html) 持久库来救场的时候了。
+
+[Room](https://developer.android.com/training/data-storage/room/index.html) 是一个对象映射库，它提供了最少模板代码的本地数据持久保存。在编译时他会将每个请求同数据库架构验证，所以错误的 SQL 查询会导致编译期错误而不是运行时失败。Room 抽象了与原始数据库表以及查询交互的工作实现细节。它还允许观测数据库数据（包括集和连接查询）的变化，并通过 *LiveData* 将这些变化暴露出来。此外，它显式定义了线程约束，这解决了很多常见问题（比如在主线程访问存储）。
+
+> **笔记：** 如果你的 app 已经使用其它持久方案像 SQLite 对象-关系 映射（ORM），你无须将已有方案替换为 [Room](https://developer.android.com/training/data-storage/room/index.html)。但是，如果你正在编写一个新 app 或重构一个已有 app，我们推荐使用 Room 来持久化保存你 app 的数据。这样你可以利用该库的抽象和查询验证能力。
+
+为使用 Room，我们需要定义本地数据库架构。首先，使用 [@Entity](https://developer.android.com/reference/android/arch/persistence/room/Entity.html) 注解 `User` 类，将其标注为你数据库中的表。
+
+```java
+@Entity
+class User {
+  @PrimaryKey
+  private int id;
+  private String name;
+  private String lastName;
+  // 字段的 getters 和 setters
+}
+```
+
+然后，为你的 app 创建一个继承 [RoomDatabase](https://developer.android.com/reference/android/arch/persistence/room/RoomDatabase.html) 的数据库类：
+
+```java
+@Database(entities = {User.class}, version = 1)
+public abstract class MyDatabase extends RoomDatabase {
+}
+```
+
+注意 `MyDatabase` 是抽象的。Room 会自动提供它的实现。更多细节见 [Room](https://developer.android.com/topic/libraries/architecture/room.html) 文档。
+
+现在我们需要一种方式来向数据库中插入用户数据。为此，我们要创建一个 [data access object (DAO)](https://en.wikipedia.org/wiki/Data_access_object)
+
+```java
+@Dao
+public interface UserDao {
+    @Insert(onConflict = REPLACE)
+    void save(User user);
+    @Query("SELECT * FROM user WHERE id = :userId")
+    LiveData<User> load(String userId);
+}
+```
+
+然后从数据库类中返回 DAO 的引用。
+
+```java
+@Database(entities = {User.class}, version = 1)
+public abstract class MyDatabase extends RoomDatabase {
+    public abstract UserDao userDao();
+}
+```
+
+注意 `load` 方法返回 `LiveData<User>`。这样 Room 知晓什么时候数据库被修改，且当数据变化时它会自动通知所有处于活动状态的观测者。因为使用了 *LiveData*，这是高效的，因为它只会在至少有一个活动的观测者时更新数据。
+
+> **笔记：** Room 检查不合法
+
+
 
 
