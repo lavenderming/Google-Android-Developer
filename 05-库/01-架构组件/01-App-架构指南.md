@@ -120,7 +120,7 @@ public class UserProfileViewModel extends ViewModel {
 public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
     viewModel.getUser().observe(this, user -> {
-      // update UI
+      // 更新 UI
     });
 }
 ```
@@ -311,7 +311,47 @@ public abstract class MyDatabase extends RoomDatabase {
 
 注意 `load` 方法返回 `LiveData<User>`。这样 Room 知晓什么时候数据库被修改，且当数据变化时它会自动通知所有处于活动状态的观测者。因为使用了 *LiveData*，这是高效的，因为它只会在至少有一个活动的观测者时更新数据。
 
-> **笔记：** Room 检查不合法
+> **笔记：** Room 基于表修改检查无效输入，这意味着它可能发送错误通知。
+
+现在我们修改 `UserRepository` 来集成 Room 数据源
+
+```java
+@Singleton
+public class UserRepository {
+    private final Webservice webservice;
+    private final UserDao userDao;
+    private final Executor executor;
+
+    @Inject
+    public UserRepository(Webservice webservice, UserDao userDao, Executor executor) {
+        this.webservice = webservice;
+        this.userDao = userDao;
+        this.executor = executor;
+    }
+
+    public LiveData<User> getUser(String userId) {
+        refreshUser(userId);
+        // 直接从数据库返回 LiveData 
+        return userDao.load(userId);
+    }
+
+    private void refreshUser(final String userId) {
+        executor.execute(() -> {
+            // running in a background thread
+            // check if user was fetched recently
+            boolean userExists = userDao.hasUser(FRESH_TIMEOUT);
+            if (!userExists) {
+                // refresh the data
+                Response response = webservice.getUser(userId).execute();
+                // TODO check for error etc.
+                // Update the database.The LiveData will automatically refresh so
+                // we don't need to do anything else here besides updating the database
+                userDao.save(response.body());
+            }
+        });
+    }
+}
+```
 
 
 
