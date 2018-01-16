@@ -8,6 +8,12 @@
     - [添加按钮](#%E6%B7%BB%E5%8A%A0%E6%8C%89%E9%92%AE)
 - [添加列表](#%E6%B7%BB%E5%8A%A0%E5%88%97%E8%A1%A8)
         - [添加持久多选或单选列表](#%E6%B7%BB%E5%8A%A0%E6%8C%81%E4%B9%85%E5%A4%9A%E9%80%89%E6%88%96%E5%8D%95%E9%80%89%E5%88%97%E8%A1%A8)
+    - [创建自定义布局](#%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B8%83%E5%B1%80)
+- [将事件返回 dialog 的 host](#%E5%B0%86%E4%BA%8B%E4%BB%B6%E8%BF%94%E5%9B%9E-dialog-%E7%9A%84-host)
+- [显示 Dialog](#%E6%98%BE%E7%A4%BA-dialog)
+- [将 dialog 全屏显示或作为内嵌 fragment](#%E5%B0%86-dialog-%E5%85%A8%E5%B1%8F%E6%98%BE%E7%A4%BA%E6%88%96%E4%BD%9C%E4%B8%BA%E5%86%85%E5%B5%8C-fragment)
+    - [在大屏中将 activity 作为 dialog 显示](#%E5%9C%A8%E5%A4%A7%E5%B1%8F%E4%B8%AD%E5%B0%86-activity-%E4%BD%9C%E4%B8%BA-dialog-%E6%98%BE%E7%A4%BA)
+- [让 Dialog 消失](#%E8%AE%A9-dialog-%E6%B6%88%E5%A4%B1)
 
 # 核心类
 - [DialogFragment](https://developer.android.com/reference/android/app/DialogFragment.html)
@@ -199,13 +205,378 @@ public Dialog onCreateDialog(Bundle savedInstanceState) {
 
 > **笔记：** 默认情况，触摸一个列表选项后 dialog 会消失，除非你使用下面介绍的某个持久选择列表。
 
+### 添加持久多选或单选列表
+
 > ![](https://developer.android.com/images/ui/dialog_checkboxes.png)
 > 图4. 一列多选项
 
-### 添加持久多选或单选列表
+为添加一列多选项（checkboxes）或单选项（radio buttons），分别使用 [setMultiChoiceItems()](https://developer.android.com/reference/android/app/AlertDialog.Builder.html#setMultiChoiceItems(android.database.Cursor,%20java.lang.String,%20java.lang.String,%20android.content.DialogInterface.OnMultiChoiceClickListener)) 或 [setSingleChoiceItems()](https://developer.android.com/reference/android/app/AlertDialog.Builder.html#setSingleChoiceItems(int,%20int,%20android.content.DialogInterface.OnClickListener)) 方法。
 
-为添加一列多选项（checkboxes）或单选项（radio buttons），
+例如，这是如何创建一个类似图4.的多选列表，并将选中的项保存到一个 [ArrayList](https://developer.android.com/reference/java/util/ArrayList.html) 中：
 
+```java
+@Override
+public Dialog onCreateDialog(Bundle savedInstanceState) {
+    mSelectedItems = new ArrayList();  // 保存选中的项
+    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+    // 设置 dialog 标题
+    builder.setTitle(R.string.pick_toppings)
+    // 设置列表数组, 设置默认被选中的项 (null 表示没有),
+    // 以及一个当项被选中后收到回调的监听器
+           .setMultiChoiceItems(R.array.toppings, null,
+                      new DialogInterface.OnMultiChoiceClickListener() {
+               @Override
+               public void onClick(DialogInterface dialog, int which,
+                       boolean isChecked) {
+                   if (isChecked) {
+                       // 如果用户选中某项，添加该项到选中项数组中
+                       mSelectedItems.add(which);
+                   } else if (mSelectedItems.contains(which)) {
+                       // 如果取消该项，且该项在选中数组中，则移除该项
+                       mSelectedItems.remove(Integer.valueOf(which));
+                   }
+               }
+           })
+    // 设置 action buttons
+           .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+               @Override
+               public void onClick(DialogInterface dialog, int id) {
+                   // 用户点击 OK, 因此在某处保存 mSelectedItems 的结果
+                   // 或者向打开该 dialog 的组件返回这些选中项
+                   ...
+               }
+           })
+           .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+               @Override
+               public void onClick(DialogInterface dialog, int id) {
+                   ...
+               }
+           });
+
+    return builder.create();
+}
+```
+
+尽管普通列表和带 radio button 的列表都提供了 “单选” 行为，但如果你希望持久保存用户的选择，你应该使用 [setSingleChoiceItems()](https://developer.android.com/reference/android/app/AlertDialog.Builder.html#setSingleChoiceItems(int,%20int,%20android.content.DialogInterface.OnClickListener))，即之后再次打开对话框会表明用户当前的选项。 
+
+## 创建自定义布局
+
+> ![](https://developer.android.com/images/ui/dialog_custom.png)
+> 图5.自定义 dialog 布局
+
+如果你想自定义 dialog 的布局，创建一个布局并通过调用 [AlertDialog.Builder](https://developer.android.com/reference/android/app/AlertDialog.Builder.html) 对象的 [setView()](https://developer.android.com/reference/android/app/AlertDialog.Builder.html#setView(android.view.View)) 将布局添加到 [AlertDialog](https://developer.android.com/reference/android/app/AlertDialog.html)。
+
+默认情况，自定义布局将填满 dialog 窗口，但你仍然可以用 [AlertDialog.Builder](https://developer.android.com/reference/android/app/AlertDialog.Builder.html) 的方法添加按钮和标题。
+
+例如，这是图5.的布局文件
+
+`res/layout/dialog_signin.xml`
+```xml
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    <ImageView
+        android:src="@drawable/header_logo"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:scaleType="center"
+        android:background="#FFFFBB33"
+        android:contentDescription="@string/app_name" />
+    <EditText
+        android:id="@+id/username"
+        android:inputType="textEmailAddress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_marginBottom="4dp"
+        android:hint="@string/username" />
+    <EditText
+        android:id="@+id/password"
+        android:inputType="textPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_marginBottom="16dp"
+        android:fontFamily="sans-serif"
+        android:hint="@string/password"/>
+</LinearLayout>
+```
+
+> **小技巧：** 默认情况下，当你设置 [EditText](https://developer.android.com/reference/android/widget/EditText.html) 的 inputType 为 `textPassword`，则字体会被设为 `monospace`，因此，你可以更改它的字体为 `sans-serif`，来让两个输入框使用相同的字体风格。
+
+为在 [DialogFragment](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html) 中 inflate 布局，通过 [getLayoutInflater()](https://developer.android.com/reference/android/app/Activity.html#getLayoutInflater()) 获取 [LayoutInflater](https://developer.android.com/reference/android/view/LayoutInflater.html)，然后调用它的 [inflate()](https://developer.android.com/reference/android/view/LayoutInflater.html#inflate(int,%20android.view.ViewGroup))，该方法的第一个参数是布局的资源 ID，第二个参数是布局的父 view。之后你可以调用 [setView()](https://developer.android.com/reference/android/app/AlertDialog.html#setView(android.view.View)) 将布局放入 dialog。
+
+```java
+@Override
+public Dialog onCreateDialog(Bundle savedInstanceState) {
+    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+    // 获取 layout inflater
+    LayoutInflater inflater = getActivity().getLayoutInflater();
+
+    // Inflate 并将 layout 设置到 dialog
+    // 由于要作为 dialog 布局，传入 null 作为 parent view
+    builder.setView(inflater.inflate(R.layout.dialog_signin, null))
+    // 添加 action buttons
+           .setPositiveButton(R.string.signin, new DialogInterface.OnClickListener() {
+               @Override
+               public void onClick(DialogInterface dialog, int id) {
+                   // 用户登录 ...
+               }
+           })
+           .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+               public void onClick(DialogInterface dialog, int id) {
+                   LoginDialogFragment.this.getDialog().cancel();
+               }
+           });
+    return builder.create();
+}
+```
+
+> **小技巧：** 如果你想自定义布局，你还可以将 [Activity](https://developer.android.com/reference/android/app/Activity.html) 作为 dialog，而不用 [Dialog](https://developer.android.com/reference/android/app/Dialog.html) API。只要简单创建 activity 后在 manifest 文件的 [`<activity>`](https://developer.android.com/guide/topics/manifest/activity-element.html) 中将其主题设为 [Theme.Holo.Dialog](https://developer.android.com/reference/android/R.style.html#Theme_Holo_Dialog) 即可。
+
+```xml
+<activity android:theme="@android:style/Theme.Holo.Dialog" >
+```
+
+这样，activity 就会显示在一个 dialog 窗口中而不会填满整个屏幕。
+
+# 将事件返回 dialog 的 host
+
+当用户点击 dialog 的 action button 或从它的列表中选中了某些项，你的 [DialogFragment](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html) 可能自己执行一些必要的 action，但更普遍的情况是你想把该事件传回打开 dialog 的 fragment 或 activity。为达成该目标，应定义一个接口，其中有各类点击事件的方法。而后在 dialog 的 host 组件中实现该接口，则可接收到 dialog 的 action 事件。
+
+例如，这是定义了接口的 [DialogFragment](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html)，通过该接口 dialog 可以将事件返回到 host activity：
+
+```java
+public class NoticeDialogFragment extends DialogFragment {
+
+    /* 创建该 dialog fragment 的 activity 必须
+     * 实现该接口来接收事件回调
+     * 为方便 host 查询，各方法都传入一个 DialogFragment */
+    public interface NoticeDialogListener {
+        public void onDialogPositiveClick(DialogFragment dialog);
+        public void onDialogNegativeClick(DialogFragment dialog);
+    }
+
+    // 使用该接口实例来传递 action 事件
+    NoticeDialogListener mListener;
+
+    // 重写 Fragment.onAttach() 方法来实例化 NoticeDialogListener
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        // 验证 host activity 实现了回调接口
+        try {
+            // 实例化 NoticeDialogListener 让我们可以发送事件到 host
+            mListener = (NoticeDialogListener) activity;
+        } catch (ClassCastException e) {
+            // activity 没有实现该接口, 抛出异常
+            throw new ClassCastException(activity.toString()
+                    + " 必须实现 NoticeDialogListener");
+        }
+    }
+    ...
+}
+```
+
+包含 dialog 的 activity 通过 dialog fragment 的构造器构造了 dialog 的实例，并通过实现 `NoticeDialogListener` 接口接收 dialog 事件：
+
+```java
+public class MainActivity extends FragmentActivity
+                          implements NoticeDialogFragment.NoticeDialogListener{
+    ...
+
+    public void showNoticeDialog() {
+        // 创建 dialog fragment 的实例并显示它
+        DialogFragment dialog = new NoticeDialogFragment();
+        dialog.show(getSupportFragmentManager(), "NoticeDialogFragment");
+    }
+
+    // dialog fragment 通过 Fragment.onAttach() 回调接收该 activity 的引用，
+    //  而后 dialog 即可通过它调用由 NoticeDialogFragment.NoticeDialogListener
+    // 接口定义的如下方法
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        // 用户点击 dialog 的 positive button
+        ...
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+        // 用户点击 dialog 的 negative button
+        ...
+    }
+}
+```
+
+由于 host activity 实现了 `NoticeDialogListener` —— 如上所示，在 [onAttach()](https://developer.android.com/reference/android/support/v4/app/Fragment.html#onAttach(android.app.Activity)) 回调方法中强制实现 —— 则 dialog fragment 可以使用接口回调方法来向 activity 传递点击事件：
+
+```java
+public class NoticeDialogFragment extends DialogFragment {
+    ...
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        // 构建 dialog 并设置按钮处理
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setMessage(R.string.dialog_fire_missiles)
+               .setPositiveButton(R.string.fire, new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                       // 发送 positive button 事件到 host activity
+                       mListener.onDialogPositiveClick(NoticeDialogFragment.this);
+                   }
+               })
+               .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                       // 发送 negative button 事件到 host activity
+                       mListener.onDialogNegativeClick(NoticeDialogFragment.this);
+                   }
+               });
+        return builder.create();
+    }
+}
+```
+
+# 显示 Dialog
+
+当你想显示你的对话框时，创建 [DialogFragment](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html) 的实例并调用它的 [show()](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html#show(android.support.v4.app.FragmentManager,%20java.lang.String))，传入 [FragmentManager](https://developer.android.com/reference/android/support/v4/app/FragmentManager.html) 和 dialog fragment 的标签名。
+
+你可以在 [FragmentActivity](https://developer.android.com/reference/android/support/v4/app/FragmentActivity.html) 中调用 [getSupportFragmentManager()](https://developer.android.com/reference/android/support/v4/app/FragmentActivity.html#getSupportFragmentManager()) 或在 [Fragment](https://developer.android.com/reference/android/support/v4/app/Fragment.html) 中调用 [getFragmentManager()](https://developer.android.com/reference/android/support/v4/app/Fragment.html#getFragmentManager()) 来获取 [FragmentManager](https://developer.android.com/reference/android/support/v4/app/FragmentManager.html)。例如：
+
+```java
+public void confirmFireMissiles() {
+    DialogFragment newFragment = new FireMissilesDialogFragment();
+    newFragment.show(getSupportFragmentManager(), "missiles");
+}
+```
+
+第二个参数，`missiles` 是唯一的标签名，系统在需要时使用该标签名来保存与恢复 fragment 的状态。通过调用 [findFragmentByTag()](https://developer.android.com/reference/android/support/v4/app/FragmentManager.html#findFragmentByTag(java.lang.String))，该 tag 还能让你获取 fragment 的句柄。
+
+# 将 dialog 全屏显示或作为内嵌 fragment
+
+你的 UI 设计可能在某些情况下想让部分 UI 显示为 dialog，但在另一些情况下作为全屏或内嵌的 fragment（比如取决于设备是大屏还是小屏）。[DialogFragment](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html) 向你提供了这种灵活性，因为它仍可以像内嵌 [Fragment](https://developer.android.com/reference/android/support/v4/app/Fragment.html) 那样工作。
+
+但是，在这种情况下你不能使用 [AlertDialog.Builder](https://developer.android.com/reference/android/app/AlertDialog.Builder.html) 或其它 [Dialog](https://developer.android.com/reference/android/app/Dialog.html) 对象来构建 dialog。如果你想让你的 [DialogFragment](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html) 可以被内嵌，你必须在 UI 中定义 dialog 的 UI，然后在 [onCreateView()](https://developer.android.com/reference/android/support/v4/app/Fragment.html#onCreateView(android.view.LayoutInflater,%20android.view.ViewGroup,%20android.os.Bundle)) 回调中加载布局。
+
+这是一个既可以作为 dialog，又可以作为内嵌 fragment 的 [DialogFragment](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html)（使用的布局名为 `purchase_items.xml`）：
+
+```java
+public class CustomDialogFragment extends DialogFragment {
+    /** 系统调用该方法来获取 DialogFragment 的布局, 不管它是作为 dialog 还是作为内嵌 fragment */
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
+        // Inflate layout 后将其作为 dialog 或内嵌 fragment 使用
+        return inflater.inflate(R.layout.purchase_items, container, false);
+    }
+
+    /** 只有在创建 dialog 的布局时系统才会调用该方法 */
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        // 你在使用 onCreateView() 时重写该方法的唯一原因可能是为了
+        // 修改任何的 dialog 特征. 例如, dialog 默认包含
+        // 标题, 但你的自定义布局可能不需要它. 所以在此你可以
+        // 移除 dialog 的标题, 但你必须调用超类来获取 dialog.
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        return dialog;
+    }
+}
+```
+
+这里是基于屏幕尺寸将 fragment 作为 dialog 显示还是全屏 UI 显示的一些代码：
+
+```java
+public void showDialog() {
+    FragmentManager fragmentManager = getSupportFragmentManager();
+    CustomDialogFragment newFragment = new CustomDialogFragment();
+
+    if (mIsLargeLayout) {
+        // 设备使用 large 布局，将 fragment 作为 dialog 显示
+        newFragment.show(fragmentManager, "dialog");
+    } else {
+        // 设备小，将 fragment 全屏显示
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        // 为美观期间, 设置一个转变动画
+        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        // 为使其全屏, 用 'content' root view 作为容器
+        // 对于该 fragment, 总是 activity 的 root view
+        transaction.add(android.R.id.content, newFragment)
+                   .addToBackStack(null).commit();
+    }
+}
+```
+
+更多关于执行 fragment 事务的信息，见 [Fragments](https://developer.android.com/guide/components/fragments.html) 指南。
+
+在本例中，`mIsLargeLayout` boolean 值指明了当前设备是否使用 app 的大布局（并因此将 fragment 作为 dialog 显示，而不是全屏显示）。设置这种 boolean 值的最佳方式是把它声明成 [bool resource value](https://developer.android.com/guide/topics/resources/more-resources.html#Bool) 且是在不同屏幕尺寸的 [alternative resource](https://developer.android.com/guide/topics/resources/providing-resources.html#AlternativeResources) 值中声明：
+
+`res/values/bools.xml`
+```xml
+<!-- 默认 boolean values -->
+<resources>
+    <bool name="large_layout">false</bool>
+</resources>
+``` 
+
+`res/values-large/bools.xml`
+```xml
+<!-- Large 屏 boolean values -->
+<resources>
+    <bool name="large_layout">true</bool>
+</resources>
+```
+
+然后，你可以在 activity 的 [onCreate()](https://developer.android.com/reference/android/app/Activity.html#onCreate(android.os.Bundle)) 方法中初始化 `mIsLargeLayout` 值：
+
+```java
+boolean mIsLargeLayout;
+
+@Override
+public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+
+    mIsLargeLayout = getResources().getBoolean(R.bool.large_layout);
+}
+```
+
+## 在大屏中将 activity 作为 dialog 显示
+
+不使用上诉方法中的在小屏时将 dialog 作为全屏 UI，你可以用另一种方法达成相同的效果，即通过在大屏中将 Activity 显示为 dialog。选用哪种方法取决于你 app 的设计，但将 activity 作为 dialog 显示通常适用于你的 app 已经为小屏设计好了，然后你想通过显示将 activity 显示为 dialog 提升它在大屏上的体验。
+
+让 activity 只在 large 屏上显示成 dialog，在 [`<activity>`](https://developer.android.com/guide/topics/manifest/activity-element.html) manifest 元素中应用 [Theme.Holo.DialogWhenLarge](https://developer.android.com/reference/android/R.style.html#Theme_Holo_DialogWhenLarge) 主题。
+
+```xml
+<activity android:theme="@android:style/Theme.Holo.DialogWhenLarge" >
+```
+
+更多关于用主题样式化 activity 的信息，见 [Styles and Themes](https://developer.android.com/guide/topics/ui/themes.html) 指南。
+
+# 让 Dialog 消失
+
+当用户点击通过 [AlertDialog.Builder](https://developer.android.com/reference/android/app/AlertDialog.Builder.html) 创建的 action button 后，系统会自动将 dialog 消失。
+
+系统还会在用户点击 dialog 列表中的项后将 dialog 消失，除非列表使用的是 radio button 或 checkboxes。此外，你也可以通过调用 [DialogFragment](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html) 的 [dismiss()](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html#dismiss()) 手动让 dialog 消失。
+
+如果你需要在 dialog 消失时执行某些操作，你可以实现 [DialogFragment](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html) 的 [onDismiss()](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html#onDismiss(android.content.DialogInterface)) 方法。
+
+你还可以 *cancel* 掉一个 dialog。这是种特殊事件，表示用户不完成任务显式离开 dialog。这种情况发生在用户按下 *Back* 按钮，触摸屏幕中 dialog 之外的区域，或如果你显示调用了 [Dialog](https://developer.android.com/reference/android/app/Dialog.html) 的 [cancel()](https://developer.android.com/reference/android/app/Dialog.html#cancel()) 方法（比如当 dialog 上 “Cancel” 按钮被点击时）。
+
+正如上面的例子所示，你可以通过实现 [DialogFragment](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html) 类的 [onCancel()](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html#onCancel(android.content.DialogInterface)) 方法。
+
+> **笔记：** 任何事件，只要触发了 [onCancel()](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html#onCancel(android.content.DialogInterface)) 回调，系统会自动调用 [onDismiss()](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html#onDismiss(android.content.DialogInterface))。但是如果你调用 [Dialog.dismiss()](https://developer.android.com/reference/android/app/Dialog.html#dismiss()) 或 [DialogFragment.dismiss()](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html#dismiss())，系统会只会调用 [onDismiss()](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html#onDismiss(android.content.DialogInterface)) 而不会调用 [onCancel()](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html#onCancel(android.content.DialogInterface))。所以当用户点击 *positive* 按钮后需要把 dialog 移出屏幕你只要调用 [dismiss()](https://developer.android.com/reference/android/support/v4/app/DialogFragment.html#dismiss())。
+
+
+
+
+
+
+ 
 
 
 
