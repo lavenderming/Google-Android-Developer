@@ -4,6 +4,9 @@
 - [还需阅读](#%E8%BF%98%E9%9C%80%E9%98%85%E8%AF%BB)
 - [概述](#%E6%A6%82%E8%BF%B0)
 - [设计哲学](#%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6)
+- [创建一个 Fragment](#%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA-fragment)
+- [暂跳](#%E6%9A%82%E8%B7%B3)
+- [处理 fragment 生命周期](#%E5%A4%84%E7%90%86-fragment-%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
 
 # 关键类
 - [Fragment](https://developer.android.com/reference/android/support/v4/app/Fragment.html)
@@ -37,4 +40,36 @@ Android 在 Android 3.0（API 级别 11）时引进了 Fragment，首要目的�
 依旧以上述的新闻 app 举例，当 app 运行于平板大小的设备时，app 可以在一个 Activity 中内嵌两个 Fragment；但在手机大小的设备中时，可以使用一个 Activity，该 Activity 内嵌显示文章列表的 Fragment，当点击文章列表中的具体某篇文章时，启动另一个 Activity，内嵌读取具体文章内容的 Fragment。因此通过在不同的组合中重复使用 fragment，app 既支持平板，也支持手机。
 
 更多关于为不同屏幕配置设计不同 fragment 组合的 app 的信息，见：[Supporting Tablets and Handsets](https://developer.android.com/guide/practices/tablets-and-handsets.html) 指南。
+
+# 创建一个 Fragment
+
+> ![](https://developer.android.com/images/fragment_lifecycle.png)
+> 图2.fragment 的生命周期（当 fragment 的 activity 运行时）
+
+为创建 Fragment，必须继承 [Fragment](https://developer.android.google.cn/reference/android/app/Fragment.html) 类（或继承 Fragment 类的已有子类）。 [Fragment](https://developer.android.google.cn/reference/android/app/Fragment.html) 类的代码看起来有点像 [Activity](https://developer.android.google.cn/reference/android/app/Activity.html) 类。它包含了与 Activity 类相似的回调函数，例如：[onCreate()](https://developer.android.google.cn/reference/android/app/Fragment.html#onCreate(android.os.Bundle))、[onStart()](https://developer.android.google.cn/reference/android/app/Fragment.html#onStart())、[onPause()](https://developer.android.google.cn/reference/android/app/Fragment.html#onPause())、[onStop()](https://developer.android.google.cn/reference/android/app/Fragment.html#onStop())。事实上，如果将已有的 app 改为使用 Fragment，可能只要简单地将原本 Activity 回调函数中的代码移动到对应的 Fragment 回调函数中去即可。
+
+通常，创建 Fragment 至少需要实现以下几个生命周期函数：
+
+- [onCreate()](https://developer.android.google.cn/reference/android/app/Fragment.html#onCreate(android.os.Bundle))
+
+    当系统创建 Fragment 时调用该函数。在你的实现中，该函数应该初始化 Fragment 的核心组件，这些核心组件在 Fragment 进入 Paused 或 Stopped 后，再进入 resumed 状态可以保留。
+
+- [onCreateView()](https://developer.android.google.cn/reference/android/app/Fragment.html#onCreateView(android.view.LayoutInflater, android.view.ViewGroup, android.os.Bundle)) 
+
+    当 Fragment 要第一次绘制自己的 UI 时，系统调用该回调函数。为绘制 UI 该函数必须返回一个 [View](https://developer.android.google.cn/reference/android/view/View.html) 作为你的 Fragment 布局的根。若 Fragment 不需要提供 UI，可以返回 null。
+
+- [onPause()](https://developer.android.google.cn/reference/android/app/Activity.html#onPause())
+
+    系统调用该函数表明用户离开了该 Fragment（这不意味着该 Fragment 一定会被销毁）。这通常是你提交需要保存的用户更改的地方（因为用户可能不再回来了）。
+
+大多数 app 的每个 fragment 都应该至少实现这三个方法，但这仍有一些其它回调方法你可以用来处理 fragment 生命周期的各种状态。所有生命周期回调方法都会在 [Handling the Fragment Lifecycle](https://developer.android.com/guide/components/fragments.html#Lifecycle) 中作更具体的讨论。
+
+# 暂跳
+
+# 处理 fragment 生命周期
+
+> ![](https://developer.android.com/images/activity_fragment_lifecycle.png)
+> 图3. activity 生命周期对 fragment 生命周期的影响。
+
+
 
