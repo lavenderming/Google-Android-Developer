@@ -46,7 +46,7 @@
 
 在 activity 内，调用支持库 API 提供的 [getSupportFragmentManager()](https://developer.android.com/reference/android/support/v4/app/FragmentActivity.html#getSupportFragmentManager()) 方法获取一个 [FragmentManager](https://developer.android.com/reference/android/support/v4/app/FragmentManager.html)。然后调用 [FragmentManager](https://developer.android.com/reference/android/support/v4/app/FragmentManager.html) 的 [beginTransaction()](https://developer.android.com/reference/android/support/v4/app/FragmentManager.html#beginTransaction()) 创建一个 [FragmentTransaction](https://developer.android.com/reference/android/support/v4/app/FragmentTransaction.html)。
 
-> 阿懂的注释：然后，给事务添加操作，这里的操作时添加一个 fragment。
+> 阿懂的注释：然后，给事务添加操作，这里的操作是添加一个 fragment。
 
 调用 [FragmentTransaction](https://developer.android.com/reference/android/support/v4/app/FragmentTransaction.html) 的 [add()](https://developer.android.com/reference/android/support/v4/app/FragmentTransaction.html#add(android.support.v4.app.Fragment,java.lang.String)) 方法添加一个 fragment。你可以用相同的 [FragmentTransaction](https://developer.android.com/reference/android/support/v4/app/FragmentTransaction.html) 执行多个关于这个 activity 的 fragment 事务。
 
