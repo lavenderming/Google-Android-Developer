@@ -17,7 +17,7 @@
 > **笔记：** 该指南假定读者已经熟悉 Android Framework。如果你是新开发者，请前往 [Getting Started](https://developer.android.com/training/index.html) 系列培训，那里涵盖了本指南的前置话题。
 
 # app 开发者面临的常见问题
-不像传统桌面应用，它们大多数情况下，只有一个从启动页快捷方式进入系统的 entry point 且作为整体运行，而 Android app 有更复杂的结构。一个典型的 Android app 由许多 [app components](https://developer.android.com/guide/components/fundamentals.html#Components) 构成，包括：activities, fragments, services, content providers 和 broadcast receivers。
+不像传统桌面应用，它们大多数情况下，只有一个从启动页快捷方式进入系统的 entry point 且作为整体运行，而 Android app 有更复杂的结构。一个典型的 Android app 由多个 [app components](https://developer.android.com/guide/components/fundamentals.html#Components) 构成，包括：activities, fragments, services, content providers 和 broadcast receivers。
 
 这些组件中的大多数需要在 app 的 [manifest](https://developer.android.com/guide/topics/manifest/manifest-intro.html) 中声明，而 manifest 文件则被 Android OS 用来判断如何将你的 app 集成到设备的整体用户体验中。并且，如上面提到的，桌面应用通常作为整体运行，而一个正确编写的 Android app 需要更灵活的处理，因为用户需要经常切换不同 app、流程以及任务。
 

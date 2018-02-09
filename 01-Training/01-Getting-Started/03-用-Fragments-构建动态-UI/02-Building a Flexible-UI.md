@@ -37,6 +37,7 @@
 
 ```xml
 <!-- res/layout/news_articles.xml -->
+
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/fragment_container"
     android:layout_width="match_parent"
