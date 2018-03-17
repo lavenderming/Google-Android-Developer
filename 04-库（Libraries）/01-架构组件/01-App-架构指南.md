@@ -10,6 +10,10 @@
     - [连接 ViewModel 和 repository](#%E8%BF%9E%E6%8E%A5-viewmodel-%E5%92%8C-repository)
     - [缓存数据](#%E7%BC%93%E5%AD%98%E6%95%B0%E6%8D%AE)
     - [持久化保存数据](#%E6%8C%81%E4%B9%85%E5%8C%96%E4%BF%9D%E5%AD%98%E6%95%B0%E6%8D%AE)
+        - [单一真实数据源（single source of truth）](#%E5%8D%95%E4%B8%80%E7%9C%9F%E5%AE%9E%E6%95%B0%E6%8D%AE%E6%BA%90%EF%BC%88single-source-of-truth%EF%BC%89)
+    - [测试（未完成）](#%E6%B5%8B%E8%AF%95%EF%BC%88%E6%9C%AA%E5%AE%8C%E6%88%90%EF%BC%89)
+    - [最终架构](#%E6%9C%80%E7%BB%88%E6%9E%B6%E6%9E%84)
+- [指导原则](#%E6%8C%87%E5%AF%BC%E5%8E%9F%E5%88%99)
 
 # 概述
 该指南适用于那些过去是基础 app 开发人员，而如今想了解构建健壮、生产级质量的 app 的最佳实践和推荐架构。
@@ -23,14 +27,14 @@
 
 例如，思考下当你在你最爱的社交 app 中分享照片时：app 发送一个相机 intent，然后 Android OS 启动一个相机 app 来处理这个请求；此时，用户离开了社交 app 但用户的体验是一致的；对于相机 app，可能发送另一个 intent，比如启动文件选择器，这可能会启动另一个 app；最终，用户回到社交 app 并分享照片。同样，用户可以被任意时间点的来电打断当前的进程且在结束通话后返回继续分享照片的流程。
 
-在 Android 中，app 间的跳跃行为是很平常的，所以你的 app 必须正确处理这些流程。记住移动设备是资源受限的，因此在任意时间点，操作系统可能需要 kill 掉一些 app 来为新 app 腾出空间。
+在 Android 中，app 间的跳跃行为是很平常的，所以你的 app 必须正确处理这些流程。记住移动设备是资源受限的，因此在任意时间点，操作系统可能需要 kill 一些 app 来为新 app 腾出空间。
 
 以上的关键点在于你的 app 组件可以被独立且无序地启动，而且可以在任何时间被系统或用户销毁。由于 app 组件是短暂的且它们的生命周期（从创建到销毁）不在你的控制之下，**因此你不应该在 app 组件内保存任何 app 数据以及状态** 并且你的 app 组件应该不互相依赖。
 
 # 通用架构原则
-如果你不能使用 app 组件来保存 app 数据和状态，那 app 应该如何被构建？
+如果你不能使用 app 组件来保存 app 数据和状态，那应该如何构建 app ？
 
-首先，你最应该关注是 **[关注点分离](https://en.wikipedia.org/wiki/Separation_of_concerns)**。一个很经常的错误是把所有代码写在某个 [Activity](https://developer.android.com/reference/android/app/Activity.html) 或某个 [Fragment](https://developer.android.com/reference/android/app/Fragment.html) 中。任何不处理 UI 或不执行系统交互的代码都不应该放在这些类中。让这些类尽可能“瘦”会使你避免许多生命周期相关的问题。别忘了你*并不拥有*这些类，它们只是胶水类，是系统和你 app 间的约定（contract）。Android 系统可能在任何任何时间销毁这些类，取决于用户交互或其它因素，比如低内存。所以最好降低你对它们的依赖以提供稳定的用户体验。
+首先，你最应该关注是 **[关注点分离（separation of concerns）](https://en.wikipedia.org/wiki/Separation_of_concerns)**。一个很经常的错误是把所有代码写在某个 [Activity](https://developer.android.com/reference/android/app/Activity.html) 或某个 [Fragment](https://developer.android.com/reference/android/app/Fragment.html) 中。任何不处理 UI 或不执行系统交互的代码都不应该放在这些类中。让这些类尽可能“瘦”会使你避免许多生命周期相关的问题。别忘了你 *并不拥有* 这些类，它们只是胶水类，是系统和你 app 间的约定（contract）。Android 系统可能在任何任何时间销毁这些类，取决于用户交互或其它因素，比如低内存。所以最好降低你对它们的依赖以提供稳定的用户体验。
 
 第二个重要的原则是你应该 **从模型（model）驱动你的 UI**，最好是一个持久模型。持久的好处有两个：一方面如果系统销毁你的 app 来释放资源，你的用户不会丢失数据；另一方面即使在网络差或没网情况下，你的 app 仍然可以工作。模型是负责为 app 处理数据的组件。它们不依赖 app view 和 app 组件，因此它们与这些组件的生命周期问题隔离。保持 UI 代码简单并将其与 app 逻辑分离能让它更容易管理。将你的 app 基于操作数据职责定义良好的模型类有助于让其可测试并使你的 app 稳定。
 
@@ -94,7 +98,7 @@ public class UserProfileFragment extends Fragment {
 }
 ```
 
-现在，我们有三个代码模块，我们该如何连接它们？最后，当 ViewModel 的 user 字段被赋值，我们需要一种方式来通知 UI。这就是 *LiveData* 类起作用的地方。
+现在，我们有三个代码模块，我们该如何连接它们？此外，当 ViewModel 的 user 字段被赋值，我们需要一种方式来通知 UI。这就是 *LiveData* 类起作用的地方。
 
 [**LiveData**](https://developer.android.com/topic/libraries/architecture/livedata.html) 是一个可观测的数据持有者。它允许你 app 的组件观测 [LiveData](https://developer.android.com/reference/android/arch/lifecycle/LiveData.html) 对象的变化而无需在其间创建显式且死板依赖路径。LiveData 还遵从 app 组件（activity、fragment、service）的生命周期变化，且能正确处理以防止对象泄漏，因此你的 app 不会花费更多内存。
 
@@ -224,7 +228,7 @@ public class UserProfileViewModel extends ViewModel {
 
 上面实现的 repository 很好地对 web 服务的调用进行了抽象，但由于它只依赖于一个数据源，还不是很实用。
 
-上面实现的 `UserRepository` 的问题是在获取数据后，它没有在任何地方保存该数据。如果用户离开 `UserProfileFragment` 再返回，app 需要重新获取数据。两种理由可以说明这种方式的不好之处：一方面浪费了珍贵的网络带宽，另一方面强迫用户等待新的查询执行完毕。为处理这个问题，我们要给 `UserRepository` 添加新的数据源将 `User` 对象缓存在内存中。
+上面实现的 `UserRepository` 的问题是在获取数据后，它没有在任何地方保存该数据。如果用户离开 `UserProfileFragment` 再返回，app 需要重新获取数据。两种理由可以说明这种方式的不好之处：一方面浪费了珍贵的网络带宽，另一方面强迫用户等待新的查询执行完毕。为处理这个问题，我们要给 `UserRepository` 添加新的数据源，该数据源将 `User` 对象缓存在内存中。
 
 ```java
 @Singleton  // 告知 Dagger 该类应该只创建一次
@@ -257,15 +261,15 @@ public class UserRepository {
 
 在我们当前的实现中，如果用户旋转屏幕或离开然后返回 app，现有的 UI 会立即可见，因为 repository 从内存缓存取回数据。但用户离开 app 一小时，在 Android 系统杀死进程后返回会发生什么呢？
 
-在当前的实现中，我们需要重新从网络获取数据。这不仅用户体验差，而且用移动网络重新获取相同数据很浪费。你可以简单地通过缓存 web 请求来修复这个问题，但这又造成新问题。如果显示的用户数据来自其它类型的请求（比如获取一列好友）会发生什么？那样你的 app 可能会显示不一致的数据，这是一种混乱的用户体验。例如，同种的用户数据可能不一致，因为好友列表请求和用户请求可能在不同的时间执行。你的 app 需要合并它们来防止展示不一致的数据。
+在当前的实现中，我们需要重新从网络获取数据。这不仅用户体验差，而且用移动网络重新获取相同数据很浪费。你可以简单地通过缓存 web 请求来修复这个问题，但这又造成新问题。如果显示的用户数据来自其它类型的请求（比如获取一列好友）会发生什么？那样你的 app 可能会显示不一致的数据，这导致混乱的用户体验。例如，本该一样的用户数据可能显示不一致，因为获取数据的好友列表请求和用户请求可能在不同的时间执行。你的 app 需要合并它们来防止展示不一致的数据。
 
 处理这种情况的一种适合方式是使用持久模型。这就到了 [Room](https://developer.android.com/training/data-storage/room/index.html) 持久库来救场的时候了。
 
-[Room](https://developer.android.com/training/data-storage/room/index.html) 是一个对象映射库，它提供了最少模板代码的本地数据持久保存。在编译时他会将每个请求同数据库架构验证，所以错误的 SQL 查询会导致编译期错误而不是运行时失败。Room 抽象了与原始数据库表以及查询交互的工作实现细节。它还允许观测数据库数据（包括集和连接查询）的变化，并通过 *LiveData* 将这些变化暴露出来。此外，它显式定义了线程约束，这解决了很多常见问题（比如在主线程访问存储）。
+[Room](https://developer.android.com/training/data-storage/room/index.html) 是一个对象映射库，它提供了最少模板代码的本地数据持久保存。在编译时他会将每个请求同数据库架构验证，所以错误的 SQL 查询语句会导致编译期错误而不是运行时失败。Room 抽象了与原始数据库表以及查询交互的工作实现细节。它还允许观测数据库数据（包括集和连接查询）的变化，并通过 *LiveData* 将这些变化暴露出来。此外，它明确定义了线程约束，这解决了很多常见问题（比如在主线程访问存储）。
 
-> **笔记：** 如果你的 app 已经使用其它持久方案像 SQLite 对象-关系 映射（ORM），你无须将已有方案替换为 [Room](https://developer.android.com/training/data-storage/room/index.html)。但是，如果你正在编写一个新 app 或重构一个已有 app，我们推荐使用 Room 来持久化保存你 app 的数据。这样你可以利用该库的抽象和查询验证能力。
+> **笔记：** 如果你的 app 已经使用其它持久方案像 SQLite 对象-关系 映射（ORM），你无须将已有方案替换为 [Room](https://developer.android.com/training/data-storage/room/index.html)。但是，如果你正在编写一个新 app 或重构一个已有 app，我们推荐使用 Room 来持久化保存你 app 的数据。这样你可以利用该库的抽象优势和查询语句验证的能力。
 
-为使用 Room，我们需要定义本地数据库架构。首先，使用 [@Entity](https://developer.android.com/reference/android/arch/persistence/room/Entity.html) 注解 `User` 类，将其标注为你数据库中的表。
+为使用 Room，我们需要定义本地数据库架构。首先，使用 [@Entity](https://developer.android.com/reference/android/arch/persistence/room/Entity.html) 注解 `User` 类，将该类标注为数据库中的表。
 
 ```java
 @Entity
@@ -278,7 +282,7 @@ class User {
 }
 ```
 
-然后，为你的 app 创建一个继承 [RoomDatabase](https://developer.android.com/reference/android/arch/persistence/room/RoomDatabase.html) 的数据库类：
+然后，为 app 创建一个继承 [RoomDatabase](https://developer.android.com/reference/android/arch/persistence/room/RoomDatabase.html) 的数据库类：
 
 ```java
 @Database(entities = {User.class}, version = 1)
@@ -309,7 +313,7 @@ public abstract class MyDatabase extends RoomDatabase {
 }
 ```
 
-注意 `load` 方法返回 `LiveData<User>`。这样 Room 知晓什么时候数据库被修改，且当数据变化时它会自动通知所有处于活动状态的观测者。因为使用了 *LiveData*，这是高效的，因为它只会在至少有一个活动的观测者时更新数据。
+注意 `UserDao` 的 `load` 方法返回 `LiveData<User>`。Room 能知晓什么时候数据库被修改，且当数据变化时它会自动通知所有处于活动状态的观测者。因为使用了 *LiveData*，因为 LiveData 只会在至少有一个活动的观测者时通知更新数据，所以这是高效的。
 
 > **笔记：** Room 基于表修改检查无效输入，这意味着它可能发送错误通知。
 
@@ -337,15 +341,15 @@ public class UserRepository {
 
     private void refreshUser(final String userId) {
         executor.execute(() -> {
-            // running in a background thread
-            // check if user was fetched recently
+            // 在后台线程执行
+            // 检查用户数据是否近期已后去
             boolean userExists = userDao.hasUser(FRESH_TIMEOUT);
             if (!userExists) {
-                // refresh the data
+                // 若近期未获取则从网络更新数据
                 Response response = webservice.getUser(userId).execute();
-                // TODO check for error etc.
-                // Update the database.The LiveData will automatically refresh so
-                // we don't need to do anything else here besides updating the database
+                // TODO 这里检查错误等
+                // 用从网络获取的数据更新数据库. LiveData 会自动更新，因此
+                // 在这里我们只需要更新数据库即可
                 userDao.save(response.body());
             }
         });
@@ -353,6 +357,47 @@ public class UserRepository {
 }
 ```
 
+注意到即使我们在 `UserRepository` 中更改了数据来源，我们也无需更改我们的 `UserProfileViewModel` 或 `UserProfileFragment`。这就是由抽象提供的灵活性。这同样有助于测试，因为你可以在测试 `UserProfileViewModel` 时提供假的 `UserRepository`。
+
+现在我们的设想已完成。如果用户几天后返回相同的 UI，他们会立即看到用户信息，因为我们已将用户信息持久保存。同时，如果数据已过期，我们的 repository 会在后台更新数据。当然，这取决于你的使用情况，你可能会选择在数据过于老旧时不显示持久数据。
+
+在某些使用场景中，比如下拉刷新，对 UI 而言，如果当前正在进行网络操作，则向用户展示这些操作是很重要的。一种好的实践是分离 UI action 和可能由于各种原因更新的实际数据（例如，如果我们获取一列用户数据，则相同的用户数据可能再次获取，这会触发 `LiveData<User>` 更新）。从 UI 视角来看，正在进行的网络请求只是另一个数据点，和类似于任何其它数据块（比如 `User` 对象）。
+
+对于这种使用场景，有两种常见解决方案：
+
+- 更改 `getUser`，使其返回包含网络操作状态的 LiveData。一个示例实现在 [Addendum: exposing network status](https://developer.android.com/topic/libraries/architecture/guide.html#addendum) 部分提供。
+- 在 repository 类中提供另一个返回 User 刷新情况的公共方法。如果你只想在特定的用户行为（比如下拉刷新）时显示网络状态，则这种方式更好。
+
+### 单一真实数据源（single source of truth）
+
+不同的 REST API 端点返回同样的数据是很正常的。例如，如果我们的后台有另一个端点能返回一列用户，则同样的用户对象可能以不同的粒度来自不同的 API 端点。如果 `UserRepository` 将从 `Webservice` 的请求响应直接返回，则我们的 UI 有可能显示不一致的数据，因为在不同的请求间，服务端的数据可能发生更改。这就是为何在 `UserRepository` 的实现中，网络服务的回调仅仅只是将数据保存到数据库中。而后，数据库的改变会触发活动 LiveData 上的回调。
+
+在这一模型中，数据库作为单一真实数据源，app 的其它部分通过 repository 访问数据库。不管你是否使用磁盘缓存，我们建议你的 repository 能指定某个数据源作为 app 其它部分的单一真实数据源。
+
+## 测试（未完成）
+
+我们已经提过分离的一个好处是可测试性。让我们看看我们要如何测试各个代码模块。
+
+- **用户界面&交互：** 这是你唯一需要 [Android UI Instrumentation test](https://developer.android.com/training/testing/unit-testing/instrumented-unit-tests.html) 的时候。测试 UI 代码的最好方式是创建 [Espresso](https://developer.android.com/training/testing/ui-testing/espresso-testing.html) 测试。你可以创建一个 fragment 并向其提供一个模拟 ViewModel。由于 fragment 只和 ViewModel 交互，该模拟已足够测试该 UI。
+
+- **ViewModel：** ViewModel 可以使用 [JUnit test](https://developer.android.com/training/testing/unit-testing/local-unit-tests.html) 来测试。你只需模拟 `UserRepository` 即可测试。
+
+- **UserRepository：** 
+- 
+
+## 最终架构
+
+下面的图例显示了我们推荐架构中的所有模块以及他们间的交互：
+
+![](https://developer.android.com/topic/libraries/architecture/images/final-architecture.png) 
+
+# 指导原则
+
+编程时创造性的，构建 Android app 也不例外。对某个问题有非常多的解决方式，这些问题如多个 activity 或 fragment 间数据的交互，获取远端数据并将其本地持久化保存以用于离线模式，或 app 常见的任何情形。
+
+下面的原则并不是强制的，它基于我们的经验，且依据这些经验可以使你的代码更健壮、可测且长时间维持。
+
+- 定义在 manifest 文件中的 entry point —— activities、services、broadcast receivers 等 —— 不是数据源。相反，它们只是
 
 
 
